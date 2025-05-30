@@ -1,34 +1,44 @@
-import { Torneo } from '../models/torneos.model';
 
-const torneos: Torneo[] = []; // Simulación de base de datos en memoria
+export default class TorneoService {
+  private torneos: Torneo[] = [];
 
-export const obtenerTorneos = (): Torneo[] => {
-  return torneos;
-};
+  public obtenerTodos(): Torneo[] {
+    return this.torneos;
+  }
 
-export const obtenerTorneo = (id: string): Torneo | undefined => {
-  return torneos.find(torneo => torneo.id === id);
-};
+  public obtenerPorId(id: string): Torneo | undefined {
+    return this.torneos.find(torneo => torneo.id === id);
+  }
 
-export const crearTorneo = (nuevoTorneo: Torneo): Torneo => {
-  torneos.push(nuevoTorneo);
-  return nuevoTorneo;
-};
+  public crear(torneoData: Torneo): Torneo {
+    this.torneos.push(torneoData);
+    return torneoData;
+  }
 
-export const actualizarTorneo = (id: string, torneoActualizado: Torneo): boolean => {
-  const index = torneos.findIndex(torneo => torneo.id === id);
-  if (index !== -1) {
-    torneos[index] = torneoActualizado;
+  public actualizar(id: string, torneoData: Partial<Torneo>): Torneo | null {
+    const torneoIndex = this.torneos.findIndex(t => t.id === id);
+    
+    if (torneoIndex === -1) {
+      return null;
+    }
+
+    const torneoActualizado = {
+      ...this.torneos[torneoIndex],
+      ...torneoData,
+      id
+    };
+
+    this.torneos[torneoIndex] = torneoActualizado;
+    return torneoActualizado;
+  }
+
+  public eliminar(id: string): boolean {
+    const torneoIndex = this.torneos.findIndex(t => t.id === id);
+    if (torneoIndex === -1) {
+      return false;
+    }
+    
+    this.torneos.splice(torneoIndex, 1);
     return true;
   }
-  return false;
-};
-
-export const eliminarTorneo = (id: string): boolean => {
-  const index = torneos.findIndex(torneo => torneo.id === id);
-  if (index !== -1) {
-    torneos.splice(index, 1);
-    return true;
-  }
-  return false;
-};
+}
