@@ -4,6 +4,7 @@ import torneosRouter from "./routes/torneos.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
+import pool from "./db/db";
 
 const app = express();
 
@@ -22,3 +23,12 @@ app.use("/torneos", torneosRouter);
 app.listen(PORT, () => {
     console.log("Server running on http://localhost:3000");
 });
+
+// Prueba de conexión al iniciar el servidor
+pool.query("SELECT NOW()")
+  .then(() => {
+    console.log("✅ Conexión a PostgreSQL exitosa");
+  })
+  .catch((err) => {
+    console.error("❌ Error al conectar a PostgreSQL:", err);
+  });
