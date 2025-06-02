@@ -5,6 +5,9 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
 import pool from "./db/db";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 
@@ -18,17 +21,17 @@ app.use(cors());
 app.use(cookieParser(COOKIE_SECRET));
 
 app.use("/users", usersRouter);
-app.use("/torneos", torneosRouter);
+app.use("/tournaments", torneosRouter);
 
-app.listen(PORT, () => {
-    console.log("Server running on http://localhost:3000");
-});
-
-// Prueba de conexión al iniciar el servidor
-pool.query("SELECT NOW()")
+pool
+  .query("SELECT NOW()")
   .then(() => {
     console.log("✅ Conexión a PostgreSQL exitosa");
   })
   .catch((err) => {
     console.error("❌ Error al conectar a PostgreSQL:", err);
   });
+
+app.listen(PORT, () => {
+  console.log("Server running on http://localhost:3000");
+});

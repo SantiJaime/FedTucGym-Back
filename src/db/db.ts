@@ -1,7 +1,4 @@
 import { Pool } from "pg";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const pool = new Pool({
   host: process.env.PGHOST,
@@ -9,8 +6,7 @@ const pool = new Pool({
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
   database: process.env.PGDATABASE,
+  options: "-c search_path=fedtucgym",
 });
-
-
 
 export default pool;
