@@ -1,38 +1,46 @@
-export default class UserService {
-  private users: User[] = [
-    {
-      id: 1,
-      fullname: "Santi Jaime",
-      email: "5o2WZ@example.com",
-      password: "password123",
-    },
-  ];
+import pool from "../db/db";
+import type { User } from "../schemas/user.schema";
 
+export default class userservice {
   public async getUsers(): Promise<User[]> {
-    return this.users;
+    const { rows } = await pool.query("SELECT * FROM users");
+    return rows;
   }
 
   public async getUserById(id: number): Promise<User | undefined> {
-    return this.users.find((user) => user.id === id);
+    const { rows } = await pool.query(
+      "SELECT * FROM users WHERE id_user = $1",
+      [id]
+    );
+    return rows[0];
   }
 
-  public async createUser(user: User): Promise<User> {
-    this.users.push(user);
-    return user;
+  public async createUser(user: Omit<User, "id">): Promise<User> {
+    const { full_name, email, password, id_role, membership_number } = user;
+    const { rows } = await pool.query(
+      "INSERT INTO users (full_name, email, password, id_role, membership_number) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [full_name, email, password, id_role, membership_number]
+    );
+    return rows[0];
   }
 
-  public async updateUser(user: User): Promise<User | undefined> {
-    const index = this.users.findIndex((u) => u.id === user.id);
-    if (index !== -1) {
-      this.users[index] = user;
-      return user;
-    }
-    return undefined;
+  public async updateUserFullname(
+    id: number,
+    user: Pick<User, "full_name">
+  ): Promise<User | undefined> {
+    const { full_name } = user;
+    const { rows } = await pool.query(
+      "UPDATE users SET full_name = $1 WHERE id_user = $2 RETURNING *",
+      [full_name, id]
+    );
+    return rows[0];
   }
 
   public async deleteUser(id: number): Promise<boolean> {
-    const initialLength = this.users.length;
-    this.users = this.users.filter((user) => user.id !== id);
-    return this.users.length !== initialLength;
+    const { rowCount } = await pool.query(
+      "DELETE FROM users WHERE id_user = $1",
+      [id]
+    );
+    return !!rowCount && rowCount > 0;
   }
 }
