@@ -1,6 +1,6 @@
 import express from "express";
 import usersRouter from "./routes/users.routes";
-import torneosRouter from "./routes/torneos.routes";
+import tournamentsRouter from "./routes/tournaments.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
@@ -21,7 +21,7 @@ app.use(cors());
 app.use(cookieParser(COOKIE_SECRET));
 
 app.use("/users", usersRouter);
-app.use("/tournaments", torneosRouter);
+app.use("/tournaments", tournamentsRouter);
 
 pool
   .query("SELECT NOW()")

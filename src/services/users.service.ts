@@ -2,12 +2,12 @@ import pool from "../db/db";
 import type { User } from "../schemas/user.schema";
 
 export default class userservice {
-  public async getUsers(): Promise<User[]> {
+  public async getAll(): Promise<User[]> {
     const { rows } = await pool.query("SELECT * FROM users");
     return rows;
   }
 
-  public async getUserById(id: number): Promise<User | undefined> {
+  public async getById(id: number): Promise<User | undefined> {
     const { rows } = await pool.query(
       "SELECT * FROM users WHERE id_user = $1",
       [id]
@@ -15,7 +15,7 @@ export default class userservice {
     return rows[0];
   }
 
-  public async createUser(user: Omit<User, "id">): Promise<User> {
+  public async create(user: Omit<User, "id">): Promise<User> {
     const { full_name, email, password, id_role, membership_number } = user;
     const { rows } = await pool.query(
       "INSERT INTO users (full_name, email, password, id_role, membership_number) VALUES ($1, $2, $3, $4, $5) RETURNING *",
@@ -24,7 +24,7 @@ export default class userservice {
     return rows[0];
   }
 
-  public async updateUserFullname(
+  public async updateFullname(
     id: number,
     user: Pick<User, "full_name">
   ): Promise<User | undefined> {
@@ -36,7 +36,7 @@ export default class userservice {
     return rows[0];
   }
 
-  public async deleteUser(id: number): Promise<boolean> {
+  public async delete(id: number): Promise<boolean> {
     const { rowCount } = await pool.query(
       "DELETE FROM users WHERE id_user = $1",
       [id]
