@@ -8,7 +8,7 @@ export const CreateUserDTO = z.object({
   id_role: z.number().int("El id del rol debe ser un número entero").nonnegative("El id del rol no puede ser negativo"),
 });
 
-const idSchema = z
+export const idSchema = z
   .number({
     invalid_type_error: "El id debe ser un número",
     required_error: "El id es obligatorio",

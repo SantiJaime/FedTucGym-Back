@@ -1,14 +1,21 @@
 import type { Request, Response } from "express";
 import UserService from "../services/users.service";
-import { CreateUserDTO, UpdateUserDTO, UserIdDTO } from "../schemas/user.schema";
-import { hashPassword } from '../utils/bcrypt';
+import {
+  CreateUserDTO,
+  UpdateUserDTO,
+  UserIdDTO,
+} from "../schemas/user.schema";
+import { hashPassword } from "../utils/bcrypt";
+import { parseErrors } from "../utils/utils";
 
 const userService = new UserService();
 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const users = await userService.getUsers();
-    res.status(200).json(users);
+    const users = await userService.getAll();
+    res
+      .status(200)
+      .json({ message: "Usuarios obtenidos correctamente", users });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -23,23 +30,20 @@ export const getOneUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    console.log(req.params.id);
     const parsedId = UserIdDTO.safeParse(Number(req.params.id));
 
     if (!parsedId.success) {
-      const allMessages = parsedId.error.issues
-        .map((issue) => `${issue.path} ${issue.message}`)
-        .join(", ");
+      const allMessages = parseErrors(parsedId.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
 
-    const user = await userService.getUserById(parsedId.data);
+    const user = await userService.getById(parsedId.data);
     if (!user) {
       res.status(404).json({ error: "Usuario no encontrado" });
       return;
     }
-    res.status(200).json(user);
+    res.status(200).json({ message: "Usuario obtenido correctamente", user });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -57,18 +61,15 @@ export const createUser = async (
     const parsedUser = CreateUserDTO.safeParse(req.body);
 
     if (!parsedUser.success) {
-      console.log(parsedUser.error);
-      const allMessages = parsedUser.error.issues
-        .map((issue) => `${issue.path} ${issue.message}`)
-        .join(", ");
+      const allMessages = parseErrors(parsedUser.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
 
     parsedUser.data.password = await hashPassword(parsedUser.data.password);
 
-    const user = await userService.createUser(parsedUser.data);
-    res.status(201).json(user);
+    const user = await userService.create(parsedUser.data);
+    res.status(201).json({ message: "Usuario creado correctamente", user });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -86,9 +87,7 @@ export const updateUserFullname = async (
     const parsedId = UserIdDTO.safeParse(Number(req.params.id));
 
     if (!parsedId.success) {
-      const allMessages = parsedId.error.issues
-        .map((issue) => `${issue.path} ${issue.message}`)
-        .join(", ");
+      const allMessages = parseErrors(parsedId.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
@@ -96,20 +95,22 @@ export const updateUserFullname = async (
     const parsedUser = UpdateUserDTO.safeParse(req.body);
 
     if (!parsedUser.success) {
-      const allMessages = parsedUser.error.issues
-        .map((issue) => `${issue.path} ${issue.message}`)
-        .join(", ");
+      const allMessages = parseErrors(parsedUser.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
 
-    const user = await userService.updateUserFullname(parsedId.data, parsedUser.data);
+    const user = await userService.updateFullname(
+      parsedId.data,
+      parsedUser.data
+    );
     if (!user) {
       res.status(404).json({ error: "Usuario no encontrado" });
       return;
     }
-    res.status(200).json(user);
-
+    res
+      .status(200)
+      .json({ message: "Nombre del usuario actualizado correctamente", user });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -127,14 +128,12 @@ export const deleteUser = async (
     const parsedId = UserIdDTO.safeParse(Number(req.params.id));
 
     if (!parsedId.success) {
-      const allMessages = parsedId.error.issues
-        .map((issue) => `${issue.path} ${issue.message}`)
-        .join(", ");
+      const allMessages = parseErrors(parsedId.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
 
-    const deletedUser = await userService.deleteUser(parsedId.data);
+    const deletedUser = await userService.delete(parsedId.data);
     if (!deletedUser) {
       res.status(404).json({ error: "Usuario no encontrado" });
       return;
