@@ -7,6 +7,14 @@ export default class userservice {
     return rows;
   }
 
+  public async getByEmail(email: string): Promise<User | undefined> {
+    const { rows } = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+    return rows[0];
+  }
+
   public async getById(id: number): Promise<User | undefined> {
     const { rows } = await pool.query(
       "SELECT * FROM users WHERE id_user = $1",

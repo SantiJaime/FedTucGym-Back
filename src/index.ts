@@ -1,11 +1,12 @@
 import express from "express";
-import usersRouter from "./routes/users.routes";
+import userRouter from "./routes/users.routes";
 import tournamentsRouter from "./routes/tournaments.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
 import pool from "./db/db";
 import dotenv from "dotenv";
+
 
 dotenv.config();
 
@@ -20,7 +21,7 @@ app.use(morgan("dev"));
 app.use(cors());
 app.use(cookieParser(COOKIE_SECRET));
 
-app.use("/users", usersRouter);
+app.use("/users", userRouter);
 app.use("/tournaments", tournamentsRouter);
 
 pool
