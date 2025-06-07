@@ -17,19 +17,21 @@ export const login = async (req: Request, res: Response) => {
 
   const user = await userService.getByEmail(email);
   if (!user) {
-    return res.status(401).json({ error: "Credenciales inválidas" });
+     res.status(401).json({ error: "Credenciales inválidas" });
+     return
   }
 
   const validPassword = await comparePassword(password, user.password);
   if (!validPassword) {
-    return res.status(401).json({ error: "Credenciales inválidas" });
+     res.status(401).json({ error: "Credenciales inválidas" });
+     return 
   }
 
-  const payload = { userId: user.id, email: user.email };
+  const payload = { userId: user.id, email: user.email, role: user.id_role };
   const secret = process.env.JWT_SECRET || "secreto";
   const token = jwt.sign(payload, secret, { expiresIn: "1h" });
 
-  return res.json({ token }); 
+  res.json({token})
 };
 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {
