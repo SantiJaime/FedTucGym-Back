@@ -4,9 +4,8 @@ import tournamentsRouter from "./routes/tournaments.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
-import pool from "./db/db";
+import pool from "./database/db.config";
 import dotenv from "dotenv";
-
 
 dotenv.config();
 

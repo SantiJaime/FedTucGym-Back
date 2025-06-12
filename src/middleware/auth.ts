@@ -1,34 +1,42 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import type { Request, Response, NextFunction } from "express";
+import { verifyToken } from "../utils/jwt.config";
 
-export const authMiddleware = (role: string) => {
+enum UserRole {
+  ADMIN = 1,
+  EVALUATOR = 2,
+  GYM_OWNER = 3,
+}
+
+const ROLE_MAP = {
+  admin: UserRole.ADMIN,
+  evaluator: UserRole.EVALUATOR,
+  gymOwner: UserRole.GYM_OWNER,
+} as const;
+
+export const authMiddleware = (requiredRole: keyof typeof ROLE_MAP) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    const signedAccessToken = req.signedCookies.accessToken;
+    if (!signedAccessToken) {
+      res.status(401).json({ error: "No estás autorizado" });
+      return;
+    }
     try {
-      const authHeader = req.header("authorization");
-      if (!authHeader) {
-         res.status(401).json({ msg: "No estás autorizado" });
-         return
-      }
+      const payloadUser = verifyToken(signedAccessToken);
 
-      const token = authHeader.split(" ")[1]; 
-      if (!token) {
-         res.status(401).json({ msg: "Token no proporcionado" });
-         return
-      }
+      const requiredRoleId = ROLE_MAP[requiredRole];
 
-      const verificarToken = jwt.verify(token, process.env.JWT_SECRET || "secreto") as any;
-
-      if (verificarToken.role === role) {
-        (req as any).userId = verificarToken.userId;
-         next(); 
-         return
-      } else {
-         res.status(403).json({ msg: "No tienes el permiso suficiente" });
-         return
+      if (payloadUser.roleId !== requiredRoleId) {
+        res.status(403).json({ error: "No tienes permiso suficiente para acceder a este recurso" });
+        return;
       }
+      req.user = payloadUser;
+      next();
     } catch (error) {
-       res.status(401).json({ msg: "Token inválido" });
-       return
+      if (error instanceof Error) {
+        res.status(403).json({ error: error.message });
+        return;
+      }
+      res.status(500).json({ error: "Error desconocido al verificar el rol" });
     }
   };
 };

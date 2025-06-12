@@ -1,4 +1,4 @@
-import pool from "../db/db";
+import pool from "../database/db.config";
 import type { User } from "../schemas/user.schema";
 
 export default class userservice {
@@ -8,10 +8,9 @@ export default class userservice {
   }
 
   public async getByEmail(email: string): Promise<User | undefined> {
-    const { rows } = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
+    const { rows } = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
     return rows[0];
   }
 
