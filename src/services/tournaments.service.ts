@@ -1,4 +1,4 @@
-import pool from "../db/db";
+import pool from "../database/db.config";
 import type { Tournament } from "../schemas/tournaments.schema";
 
 export default class TournamentService {

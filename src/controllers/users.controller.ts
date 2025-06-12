@@ -8,7 +8,7 @@ import {
 import { hashPassword } from "../utils/bcrypt";
 import { parseErrors } from "../utils/utils";
 import { comparePassword } from "../utils/bcrypt";
-import jwt from "jsonwebtoken";
+import { generateToken } from "../utils/jwt.config";
 
 const userService = new UserService();
 
@@ -17,21 +17,28 @@ export const login = async (req: Request, res: Response) => {
 
   const user = await userService.getByEmail(email);
   if (!user) {
-     res.status(401).json({ error: "Credenciales inválidas" });
-     return
+    res.status(401).json({ error: "Credenciales inválidas" });
+    return;
   }
 
   const validPassword = await comparePassword(password, user.password);
   if (!validPassword) {
-     res.status(401).json({ error: "Credenciales inválidas" });
-     return 
+    res.status(401).json({ error: "Credenciales inválidas" });
+    return;
   }
 
-  const payload = { userId: user.id, email: user.email, role: user.id_role };
-  const secret = process.env.JWT_SECRET || "secreto";
-  const token = jwt.sign(payload, secret, { expiresIn: "1h" });
-
-  res.json({token})
+  const payload = { userId: user.id, email: user.email, roleId: user.id_role };
+  const token = generateToken(payload);
+  res.cookie("accessToken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 1 * 60 * 60 * 1000,
+    signed: true,
+  });
+  res
+    .status(200)
+    .json({ message: "Sesión iniciada correctamente", userId: user.id, token });
 };
 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {
