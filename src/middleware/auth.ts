@@ -13,7 +13,9 @@ const ROLE_MAP = {
   gymOwner: UserRole.GYM_OWNER,
 } as const;
 
-export const authMiddleware = (requiredRole: keyof typeof ROLE_MAP) => {
+export const authMiddleware = (
+  requiredRole: keyof typeof ROLE_MAP | (keyof typeof ROLE_MAP)[]
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const signedAccessToken = req.signedCookies.accessToken;
     if (!signedAccessToken) {
@@ -23,10 +25,14 @@ export const authMiddleware = (requiredRole: keyof typeof ROLE_MAP) => {
     try {
       const payloadUser = verifyToken(signedAccessToken);
 
-      const requiredRoleId = ROLE_MAP[requiredRole];
+      const allowedRoles = Array.isArray(requiredRole)
+        ? requiredRole
+        : [requiredRole];
 
-      if (payloadUser.roleId !== requiredRoleId) {
-        res.status(403).json({ error: "No tienes permiso suficiente para acceder a este recurso" });
+      const allowedRoleIds = allowedRoles.map((role) => ROLE_MAP[role]);
+
+      if (!allowedRoleIds.includes(payloadUser.roleId)) {
+        res.status(403).json({ error: "Acceso denegado" });
         return;
       }
       req.user = payloadUser;

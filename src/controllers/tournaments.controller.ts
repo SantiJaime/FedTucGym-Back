@@ -1,10 +1,8 @@
 import type { Request, Response } from "express";
 import TournamentService from "../services/tournaments.service";
-import {
-  CreateTournamentDTO,
-  TournamentIdDTO,
-} from "../schemas/tournaments.schema";
+import { CreateTournamentDTO } from "../schemas/tournaments.schema";
 import { parseErrors, parseToDateRange } from "../utils/utils";
+import { IdDTO } from "../schemas/id.schema";
 
 const tournamentService = new TournamentService();
 
@@ -30,7 +28,7 @@ export const getOneTournament = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedId = TournamentIdDTO.safeParse(Number(req.params.id));
+    const parsedId = IdDTO.safeParse(Number(req.params.id));
 
     if (!parsedId.success) {
       const allMessages = parseErrors(parsedId.error.issues);
@@ -91,7 +89,7 @@ export const updateTournament = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedId = TournamentIdDTO.safeParse(Number(req.params.id));
+    const parsedId = IdDTO.safeParse(Number(req.params.id));
     if (!parsedId.success) {
       const allMessages = parseErrors(parsedId.error.issues);
       res.status(400).json({ error: allMessages });
@@ -134,7 +132,7 @@ export const deleteTournament = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedId = TournamentIdDTO.safeParse(Number(req.params.id));
+    const parsedId = IdDTO.safeParse(Number(req.params.id));
     if (!parsedId.success) {
       const allMessages = parseErrors(parsedId.error.issues);
       res.status(400).json({ error: allMessages });
