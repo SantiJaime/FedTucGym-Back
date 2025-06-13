@@ -1,14 +1,11 @@
 import type { Request, Response } from "express";
 import UserService from "../services/users.service";
-import {
-  CreateUserDTO,
-  UpdateUserDTO,
-  UserIdDTO,
-} from "../schemas/user.schema";
+import { CreateUserDTO, UpdateUserDTO } from "../schemas/users.schema";
 import { hashPassword } from "../utils/bcrypt";
 import { parseErrors } from "../utils/utils";
 import { comparePassword } from "../utils/bcrypt";
 import { generateToken } from "../utils/jwt.config";
+import { IdDTO } from "../schemas/id.schema";
 
 const userService = new UserService();
 
@@ -61,7 +58,7 @@ export const getOneUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedId = UserIdDTO.safeParse(Number(req.params.id));
+    const parsedId = IdDTO.safeParse(Number(req.params.id));
 
     if (!parsedId.success) {
       const allMessages = parseErrors(parsedId.error.issues);
@@ -115,7 +112,7 @@ export const updateUserFullname = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedId = UserIdDTO.safeParse(Number(req.params.id));
+    const parsedId = IdDTO.safeParse(Number(req.params.id));
 
     if (!parsedId.success) {
       const allMessages = parseErrors(parsedId.error.issues);
@@ -156,7 +153,7 @@ export const deleteUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedId = UserIdDTO.safeParse(Number(req.params.id));
+    const parsedId = IdDTO.safeParse(Number(req.params.id));
 
     if (!parsedId.success) {
       const allMessages = parseErrors(parsedId.error.issues);

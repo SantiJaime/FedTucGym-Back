@@ -1,4 +1,4 @@
-import type { User } from "../schemas/user.schema";
+import type { User } from "../schemas/users.schema";
 
 declare global {
   namespace Express {

@@ -1,11 +1,13 @@
 import express from "express";
-import userRouter from "./routes/users.routes";
-import tournamentsRouter from "./routes/tournaments.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
 import pool from "./database/db.config";
 import dotenv from "dotenv";
+
+import userRouter from "./routes/users.routes";
+import tournamentsRouter from "./routes/tournaments.routes";
+import membersRouter from "./routes/members.routes";
 
 dotenv.config();
 
@@ -22,6 +24,7 @@ app.use(cookieParser(COOKIE_SECRET));
 
 app.use("/users", userRouter);
 app.use("/tournaments", tournamentsRouter);
+app.use("/members", membersRouter);
 
 pool
   .query("SELECT NOW()")
