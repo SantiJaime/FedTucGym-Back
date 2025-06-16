@@ -8,13 +8,13 @@ enum UserRole {
 }
 
 const ROLE_MAP = {
-  admin: UserRole.ADMIN,
-  evaluator: UserRole.EVALUATOR,
-  gymOwner: UserRole.GYM_OWNER,
+  Administrador: UserRole.ADMIN,
+  Juez: UserRole.EVALUATOR,
+  Gimnasio: UserRole.GYM_OWNER,
 } as const;
 
 export const authMiddleware = (
-  requiredRole: keyof typeof ROLE_MAP | (keyof typeof ROLE_MAP)[]
+  requiredRoles: (keyof typeof ROLE_MAP)[]
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const signedAccessToken = req.signedCookies.accessToken;
@@ -22,19 +22,17 @@ export const authMiddleware = (
       res.status(401).json({ error: "No estás autorizado" });
       return;
     }
+
     try {
       const payloadUser = verifyToken(signedAccessToken);
 
-      const allowedRoles = Array.isArray(requiredRole)
-        ? requiredRole
-        : [requiredRole];
-
-      const allowedRoleIds = allowedRoles.map((role) => ROLE_MAP[role]);
+      const allowedRoleIds = requiredRoles.map((role) => ROLE_MAP[role]);
 
       if (!allowedRoleIds.includes(payloadUser.roleId)) {
         res.status(403).json({ error: "Acceso denegado" });
         return;
       }
+
       req.user = payloadUser;
       next();
     } catch (error) {
@@ -46,3 +44,4 @@ export const authMiddleware = (
     }
   };
 };
+

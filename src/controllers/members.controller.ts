@@ -3,20 +3,47 @@ import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
 import { parseErrors } from "../utils/utils";
 import { CreateMemberDTO, UpdateMemberDTO } from "../schemas/members.shema";
-import { DateDTO } from "../schemas/date.schema";
 
 const membersService = new MembersService();
 
 export const getAllMembers = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const members = await membersService.getAll();
+    res
+      .status(200)
+      .json({ message: "Alumnos obtenidos correctamente", members });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const getMembersByGym = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    if(!req.user?.userId) {
-      res.status(401).json({ error: "No autorizado" });
+    const parsedId = IdDTO.safeParse(Number(req.params.id));
+    if (!parsedId.success) {
+      const allMessages = parseErrors(parsedId.error.issues);
+      res.status(400).json({ error: allMessages });
       return;
     }
-    const members = await membersService.getAll(req.user?.userId);
+    if (req.user?.roleId !== 1 && parsedId.data !== req.user?.userId) {
+      res
+        .status(403)
+        .json({
+          error: "No tienes permiso para ver los miembros de este gimnasio",
+        });
+      return;
+    }
+    const members = await membersService.getByGymId(parsedId.data);
     res
       .status(200)
       .json({ message: "Alumnos obtenidos correctamente", members });
@@ -166,20 +193,12 @@ export const registerMemberToTournament = async (
     const memberId = results.mid;
     const tournamentId = results.tid;
 
-    const parsedInscriptionDate = DateDTO.safeParse(req.body.inscriptionDate);
-    if (!parsedInscriptionDate.success) {
-      const allMessages = parseErrors(parsedInscriptionDate.error.issues);
-      res.status(400).json({ error: allMessages });
-      return;
-    }
-
     const member = await membersService.registerToTournament(
       memberId,
-      tournamentId,
-      parsedInscriptionDate.data
+      tournamentId
     );
     if (!member) {
-      res.status(404).json({ error: "Alumno no encontrado" });
+      res.status(404).json({ error: "Alumno y/o torneo no encontrado" });
       return;
     }
     res
