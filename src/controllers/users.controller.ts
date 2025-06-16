@@ -1,6 +1,10 @@
 import type { Request, Response } from "express";
 import UserService from "../services/users.service";
-import { CreateUserDTO, UpdateUserDTO } from "../schemas/users.schema";
+import {
+  CreateUserDTO,
+  LoginUserDTO,
+  UpdateUserDTO,
+} from "../schemas/users.schema";
 import { hashPassword } from "../utils/bcrypt";
 import { parseErrors } from "../utils/utils";
 import { comparePassword } from "../utils/bcrypt";
@@ -10,21 +14,33 @@ import { IdDTO } from "../schemas/id.schema";
 const userService = new UserService();
 
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const parsedUser = LoginUserDTO.safeParse(req.body);
 
-  const user = await userService.getByEmail(email);
+  if (!parsedUser.success) {
+    const allMessages = parseErrors(parsedUser.error.issues);
+    res.status(400).json({ error: allMessages });
+    return;
+  }
+
+  const { full_name, password } = parsedUser.data;
+
+  const user = await userService.getByName(full_name);
   if (!user) {
-    res.status(401).json({ error: "Credenciales inválidas" });
+    res
+      .status(401)
+      .json({ error: "Nombre de usuario y/o contraseña incorrectos" });
     return;
   }
 
-  const validPassword = await comparePassword(password, user.password);
+  const validPassword = await comparePassword(password, user.password as string);
   if (!validPassword) {
-    res.status(401).json({ error: "Credenciales inválidas" });
+    res
+      .status(401)
+      .json({ error: "Nombre de usuario y/o contraseña incorrectos" });
     return;
   }
 
-  const payload = { userId: user.id, email: user.email, roleId: user.id_role };
+  const payload = { userId: user.id, role: user.role, full_name };
   const token = generateToken(payload);
   res.cookie("accessToken", token, {
     httpOnly: true,

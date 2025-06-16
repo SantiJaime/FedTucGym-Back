@@ -12,14 +12,14 @@ import {
 const router = Router();
 
 router.post("/login", login);
-router.get("/", authMiddleware("admin"), getUsers);
-router.get("/:id", authMiddleware("admin"), getOneUser);
-router.post("/", createUser);
+router.get("/", authMiddleware(["Administrador"]), getUsers);
+router.get("/:id", authMiddleware(["Administrador"]), getOneUser);
+router.post("/", authMiddleware(["Administrador"]), createUser);
 router.patch(
   "/:id",
-  authMiddleware(["admin", "gymOwner", "evaluator"]),
+  authMiddleware(["Administrador", "Gimnasio", "Juez"]),
   updateUserFullname
 );
-router.delete("/:id", authMiddleware("admin"), deleteUser);
+router.delete("/:id", authMiddleware(["Administrador"]), deleteUser);
 
 export default router;

@@ -1,21 +1,21 @@
 import pool from "../database/db.config";
 import type { User } from "../schemas/users.schema";
 
-export default class userservice {
-  public async getAll(): Promise<User[]> {
+export default class UserService {
+  public async getAll(): Promise<UserResponse[]> {
     try {
-      const { rows } = await pool.query("SELECT * FROM users");
+      const { rows } = await pool.query("SELECT * FROM users_view");
       return rows;
     } catch (error) {
       throw error;
     }
   }
 
-  public async getByEmail(email: string): Promise<User | undefined> {
+  public async getByName(full_name: string): Promise<UserResponse | undefined> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM users WHERE email = $1",
-        [email]
+        "SELECT * FROM users_view WHERE full_name = $1",
+        [full_name]
       );
       return rows[0];
     } catch (error) {
@@ -23,10 +23,10 @@ export default class userservice {
     }
   }
 
-  public async getById(id: number): Promise<User | undefined> {
+  public async getById(id: number): Promise<UserResponse | undefined> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM users WHERE id_user = $1",
+        "SELECT * FROM users_view WHERE id = $1",
         [id]
       );
       return rows[0];
@@ -35,12 +35,12 @@ export default class userservice {
     }
   }
 
-  public async create(user: Omit<User, "id">): Promise<User> {
+  public async create(user: Omit<User, "id">): Promise<Omit<User, "password">> {
     try {
-      const { full_name, email, password, id_role } = user;
+      const { full_name, password, id_role } = user;
       const { rows } = await pool.query(
-        "INSERT INTO users (full_name, email, password, id_role) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [full_name, email, password, id_role]
+        "INSERT INTO users (full_name, password, id_role) VALUES ($1, $2, $3) RETURNING id, full_name, id_role",
+        [full_name, password, id_role]
       );
       return rows[0];
     } catch (error) {
@@ -51,11 +51,11 @@ export default class userservice {
   public async updateFullname(
     id: number,
     user: Pick<User, "full_name">
-  ): Promise<User | undefined> {
+  ): Promise<Omit<User, "password"> | undefined> {
     try {
       const { full_name } = user;
       const { rows } = await pool.query(
-        "UPDATE users SET full_name = $1 WHERE id_user = $2 RETURNING *",
+        "UPDATE users SET full_name = $1 WHERE id_user = $2 RETURNING id, full_name, id_role",
         [full_name, id]
       );
       return rows[0];
