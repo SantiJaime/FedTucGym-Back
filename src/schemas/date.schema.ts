@@ -19,6 +19,24 @@ const validateDateNotPast = (value: string) => {
   return date >= today;
 };
 
+const validateBirthDate = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return date <= today;
+};
+
 export const DateDTO = z
   .string()
   .refine(validateDateFormat, {
@@ -26,6 +44,15 @@ export const DateDTO = z
   })
   .refine(validateDateNotPast, {
     message: "La fecha no puede ser pasada",
+  });
+
+export const BirthDateDTO = z
+  .string()
+  .refine(validateBirthDate, {
+    message: "La fecha de nacimiento no puede ser futura",
+  })
+  .refine(validateDateFormat, {
+    message: "La fecha debe tener el formato YYYY-MM-DD",
   });
 
 export type DateType = z.infer<typeof DateDTO>;
