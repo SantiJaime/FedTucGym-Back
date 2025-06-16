@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import TournamentService from "../services/tournaments.service";
 import { CreateTournamentDTO } from "../schemas/tournaments.schema";
-import { parseErrors, parseToDateRange } from "../utils/utils";
+import { formatDateForDaterange, parseErrors, subtractDays } from "../utils/utils";
 import { IdDTO } from "../schemas/id.schema";
 
 const tournamentService = new TournamentService();
@@ -23,6 +23,22 @@ export const getAllTournaments = async (
     res.status(500).json({ error: "Error desconocido" });
   }
 };
+
+export const getTournamentsByDate = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const tournaments = await tournamentService.getByDate();
+    res
+      .status(200)
+      .json({ message: "Torneos obtenidos correctamente", tournaments });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+}
+
 export const getOneTournament = async (
   req: Request,
   res: Response
@@ -65,14 +81,12 @@ export const createTournament = async (
       return;
     }
 
-    const { name, description, startDate, endDate } = parsedTournament.data;
+    const { name, startDate, endDate } = parsedTournament.data;
 
-    const parsedDate = parseToDateRange(startDate, endDate);
-    const tournament = await tournamentService.create({
-      name,
-      description,
-      date_range: parsedDate,
-    });
+    const parsedDate = formatDateForDaterange({ startDate, endDate });
+    const inscriptionDateEnd = subtractDays(startDate);
+
+    const tournament = await tournamentService.create({ name, date_range: parsedDate, inscriptionDateEnd });
     res
       .status(201)
       .json({ message: "Torneo creado correctamente", tournament });
@@ -84,6 +98,7 @@ export const createTournament = async (
     res.status(500).json({ error: "Error desconocido" });
   }
 };
+
 export const updateTournament = async (
   req: Request,
   res: Response
@@ -103,13 +118,14 @@ export const updateTournament = async (
       return;
     }
 
-    const { name, description, startDate, endDate } = parsedTournament.data;
+    const { name, startDate, endDate } = parsedTournament.data;
 
-    const parsedDate = parseToDateRange(startDate, endDate);
+    const parsedDate = formatDateForDaterange({ startDate, endDate });
+    const inscriptionDateEnd = subtractDays(startDate);
     const tournament = await tournamentService.update(parsedId.data, {
       name,
-      description,
       date_range: parsedDate,
+      inscriptionDateEnd
     });
 
     if (!tournament) {
@@ -127,6 +143,7 @@ export const updateTournament = async (
     res.status(500).json({ error: "Error desconocido" });
   }
 };
+
 export const deleteTournament = async (
   req: Request,
   res: Response
