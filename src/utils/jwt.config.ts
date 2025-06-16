@@ -2,8 +2,8 @@ import jwt, { type JwtPayload } from "jsonwebtoken";
 
 interface Payload {
   userId: number;
-  roleId: number;
-  gymId?: number;
+  role: string;
+  full_name: string;
 }
 type CustomJwtPayload = JwtPayload & Payload;
 

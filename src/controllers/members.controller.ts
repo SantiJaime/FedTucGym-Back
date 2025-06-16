@@ -35,7 +35,7 @@ export const getMembersByGym = async (
       res.status(400).json({ error: allMessages });
       return;
     }
-    if (req.user?.roleId !== 1 && parsedId.data !== req.user?.userId) {
+    if (req.user?.role !== "Administrador" && parsedId.data !== req.user?.userId) {
       res
         .status(403)
         .json({
