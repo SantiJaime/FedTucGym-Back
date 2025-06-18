@@ -6,13 +6,78 @@ import {
   UpdateUserDTO,
 } from "../schemas/users.schema";
 import { hashPassword } from "../utils/bcrypt";
-import { parseErrors } from "../utils/utils";
+import { hashToken, parseErrors } from "../utils/utils";
 import { comparePassword } from "../utils/bcrypt";
-import { generateToken } from "../utils/jwt.config";
+import { generateToken, verifyToken } from "../utils/jwt.config";
 import { IdDTO } from "../schemas/id.schema";
+import { env } from "../config/env";
 
 const userService = new UserService();
 
+export const refreshAccessToken = async (req: Request, res: Response) => {
+  const { refreshToken } = req.signedCookies;
+  if (!refreshToken) {
+    res.status(401).json({ error: "Acceso denegado" });
+    return;
+  }
+
+  try {
+    const payload = verifyToken(refreshToken, env.JWT_REFRESH_SECRET as string);
+    if (!payload) {
+      res.status(401).json({ error: "Acceso denegado" });
+      return;
+    }
+
+    const hashedToken = hashToken(refreshToken);
+    const isRefreshTokenValid = await userService.validateToken(
+      hashedToken,
+      payload.userId
+    );
+
+    if (!isRefreshTokenValid) {
+      res
+        .status(401)
+        .json({ error: "Sesión expirada. Por favor, vuelva a iniciar sesión" });
+      res.clearCookie("accessToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "none",
+        signed: true,
+      });
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "none",
+        signed: true,
+      });
+      return;
+    }
+
+    const token = generateToken(
+      {
+        userId: payload.userId,
+        role: payload.role,
+        full_name: payload.full_name,
+      },
+      env.JWT_SECRET as string,
+      60 * 60
+    );
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 1 * 60 * 60 * 1000,
+      signed: true,
+    });
+    res.status(200).json({ message: "Sesión extendida correctamente" });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
 export const login = async (req: Request, res: Response) => {
   const parsedUser = LoginUserDTO.safeParse(req.body);
 
@@ -32,7 +97,10 @@ export const login = async (req: Request, res: Response) => {
     return;
   }
 
-  const validPassword = await comparePassword(password, user.password as string);
+  const validPassword = await comparePassword(
+    password,
+    user.password as string
+  );
   if (!validPassword) {
     res
       .status(401)
@@ -41,7 +109,17 @@ export const login = async (req: Request, res: Response) => {
   }
 
   const payload = { userId: user.id, role: user.role, full_name };
-  const token = generateToken(payload);
+  const token = generateToken(payload, env.JWT_SECRET as string, 60 * 60);
+  const refreshToken = generateToken(
+    payload,
+    env.JWT_REFRESH_SECRET as string,
+    60 * 60 * 24 * 7
+  );
+
+  const hashedToken = hashToken(refreshToken);
+
+  await userService.saveToken(hashedToken, user.id);
+
   res.cookie("accessToken", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -49,9 +127,16 @@ export const login = async (req: Request, res: Response) => {
     maxAge: 1 * 60 * 60 * 1000,
     signed: true,
   });
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    signed: true,
+  });
   res
     .status(200)
-    .json({ message: "Sesión iniciada correctamente", userId: user.id, token });
+    .json({ message: "Sesión iniciada correctamente", userId: user.id });
 };
 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {

@@ -1,9 +1,16 @@
 import type { ZodIssue } from "zod";
+import crypto from "crypto";
 
 interface Dates {
   startDate: string;
   endDate: string;
 }
+
+export const hashToken = (token: string): string => {
+  const hash = crypto.createHash("sha256");
+  hash.update(token);
+  return hash.digest("hex");
+};
 
 export const formatDateForDaterange = ({ startDate, endDate }: Dates): string =>
   `${startDate} | ${endDate}`;

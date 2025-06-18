@@ -14,7 +14,7 @@ export default class UserService {
   public async getByName(full_name: string): Promise<UserResponse | undefined> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM users_view WHERE full_name = $1",
+        "SELECT * FROM users WHERE full_name = $1",
         [full_name]
       );
       return rows[0];
@@ -71,6 +71,51 @@ export default class UserService {
         [id]
       );
       return !!rowCount && rowCount > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async saveToken(token: string, id: number): Promise<void> {
+    try {
+      const createdAt = new Date();
+      const expiresAt = new Date(
+        createdAt.getTime() + 7 * 24 * 60 * 60 * 1000
+      ).toISOString();
+
+      await pool.query(
+        "INSERT INTO refresh_tokens (token, id_user, created_at, expires_at) VALUES ($1, $2, $3, $4)",
+        [token, id, createdAt, expiresAt]
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async validateToken(token: string, id: number): Promise<boolean> {
+    try {
+      const { rows, rowCount } = await pool.query(
+        "SELECT * FROM refresh_tokens WHERE token = $1 AND id_user = $2 AND expires_at > NOW()",
+        [token, id]
+      );
+
+      if (rowCount === 0) {
+        return false;
+      }
+
+      const tokenData = rows[0];
+      const expiresAt = new Date(tokenData.expires_at);
+      const now = new Date();
+
+      if (expiresAt <= now) {
+        await pool.query(
+          "DELETE FROM refresh_tokens WHERE token = $1 AND id_user = $2",
+          [token, id]
+        );
+        return false;
+      }
+
+      return true;
     } catch (error) {
       throw error;
     }

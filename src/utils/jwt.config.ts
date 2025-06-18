@@ -1,4 +1,4 @@
-import jwt, { type JwtPayload } from "jsonwebtoken";
+import jwt, { SignOptions, type JwtPayload } from "jsonwebtoken";
 
 interface Payload {
   userId: number;
@@ -7,17 +7,20 @@ interface Payload {
 }
 type CustomJwtPayload = JwtPayload & Payload;
 
-const JWT_SECRET = process.env.JWT_SECRET || "secreto_jwt";
 
-export const generateToken = (payload: Payload): string => {
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+export const generateToken = (payload: Payload, secret: string, expiration: number = 60 * 60): string => {
+    const options: SignOptions = {
+    expiresIn: expiration
+  }
+  const token = jwt.sign(payload, secret, options);
   return token;
 };
 
-export const verifyToken = (token: string): CustomJwtPayload => {
+export const verifyToken = (token: string, secret: string): CustomJwtPayload => {
   try {
-    const verify = jwt.verify(token, JWT_SECRET);
-
+    
+    const verify = jwt.verify(token, secret);
+    
     if (typeof verify === "string") {
       throw new Error("Token payload inválido");
     }
