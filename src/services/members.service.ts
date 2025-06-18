@@ -36,12 +36,12 @@ export default class MembersService {
     }
   }
 
-  public async create(member: Omit<Member, "id">): Promise<Member> {
+  public async create(member: CreateMember): Promise<Member> {
     try {
-      const { full_name, birth_date, age, category, id_gym } = member;
+      const { full_name, birth_date, age, category, id_gym, dni, id_level } = member;
       const { rows } = await pool.query(
-        "INSERT INTO members (full_name, birth_date, age, category, id_gym) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [full_name, birth_date, age, category, id_gym]
+        "INSERT INTO members (full_name, birth_date, age, category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+        [full_name, birth_date, age, category, id_gym, dni, id_level]
       );
       return rows[0];
     } catch (error) {
@@ -51,7 +51,7 @@ export default class MembersService {
 
   public async update(
     id: number,
-    member: Omit<Member, "id">
+    member: CreateMember
   ): Promise<Member | undefined> {
     try {
       const { full_name, birth_date, age, category, id_gym } = member;
