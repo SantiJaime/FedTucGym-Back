@@ -1,12 +1,13 @@
 import { Pool } from "pg";
+import { env } from "../config/env";
 
 const pool = new Pool({
-  host: process.env.PGHOST,
-  port: Number(process.env.PGPORT),
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-  options: "-c search_path=fedtucgym",
+  host: env.PGHOST,
+  port: Number(env.PGPORT),
+  user: env.PGUSER,
+  password: env.PGPASSWORD,
+  database: env.PGDATABASE,
+  options: `-c search_path=${env.PGSCHEMA}`,
 });
 
 export default pool;

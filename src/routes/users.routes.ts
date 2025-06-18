@@ -7,14 +7,16 @@ import {
   createUser,
   updateUserFullname,
   deleteUser,
+  refreshAccessToken,
 } from "../controllers/users.controller";
 
 const router = Router();
 
-router.post("/login", login);
 router.get("/", authMiddleware(["Administrador"]), getUsers);
 router.get("/:id", authMiddleware(["Administrador"]), getOneUser);
 router.post("/", authMiddleware(["Administrador"]), createUser);
+router.post("/login", login);
+router.post("/refresh-token", refreshAccessToken)
 router.patch(
   "/:id",
   authMiddleware(["Administrador", "Gimnasio", "Juez"]),

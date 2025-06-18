@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../utils/jwt.config";
+import { env } from 'process';
 
 enum UserRole {
   ADMIN = 1,
@@ -24,7 +25,7 @@ export const authMiddleware = (
     }
 
     try {
-      const payloadUser = verifyToken(signedAccessToken);
+      const payloadUser = verifyToken(signedAccessToken, env.JWT_SECRET as string);
 
       const allowedRoleIds = requiredRoles.map((role) => ROLE_MAP[role]);
 
