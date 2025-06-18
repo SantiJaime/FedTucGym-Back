@@ -114,8 +114,19 @@ export default class UserService {
         );
         return false;
       }
-
+ 
       return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async updateRefreshToken({ id, oldToken, newToken } : UpdateTokenParams): Promise<void> {
+    try {
+      await pool.query(
+        "UPDATE refresh_tokens SET token = $1 WHERE id_user = $2 AND token = $3",
+        [newToken, id, oldToken]
+      );
     } catch (error) {
       throw error;
     }

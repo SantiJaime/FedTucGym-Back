@@ -62,11 +62,33 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       env.JWT_SECRET as string,
       60 * 60
     );
+    const newRefreshToken = generateToken(
+      {
+        userId: payload.userId,
+        role: payload.role,
+        full_name: payload.full_name,
+      },
+      env.JWT_REFRESH_SECRET as string,
+      60 * 60 * 24 * 7
+    );
+    const hashedNewRefreshToken = hashToken(newRefreshToken);
+    await userService.updateRefreshToken({
+      oldToken: hashedToken,
+      id: payload.userId,
+      newToken: hashedNewRefreshToken,
+    });
     res.cookie("accessToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 1 * 60 * 60 * 1000,
+      signed: true,
+    });
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       signed: true,
     });
     res.status(200).json({ message: "Sesión extendida correctamente" });
