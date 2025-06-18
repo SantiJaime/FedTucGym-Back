@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
-import { parseErrors } from "../utils/utils";
+import { assignCategory, calculateAge, parseErrors } from "../utils/utils";
 import { CreateMemberDTO, UpdateMemberDTO } from "../schemas/members.shema";
 
 const membersService = new MembersService();
@@ -35,12 +35,13 @@ export const getMembersByGym = async (
       res.status(400).json({ error: allMessages });
       return;
     }
-    if (req.user?.role !== "Administrador" && parsedId.data !== req.user?.userId) {
-      res
-        .status(403)
-        .json({
-          error: "No tienes permiso para ver los miembros de este gimnasio",
-        });
+    if (
+      req.user?.role !== "Administrador" &&
+      parsedId.data !== req.user?.userId
+    ) {
+      res.status(403).json({
+        error: "No tienes permiso para ver los miembros de este gimnasio",
+      });
       return;
     }
     const members = await membersService.getByGymId(parsedId.data);
@@ -95,7 +96,20 @@ export const createMember = async (
       return;
     }
 
-    const member = await membersService.create(parsedMember.data);
+    const age = calculateAge(parsedMember.data.birth_date);
+
+    if(age < 6){
+      res.status(400).json({ error: "El alumno debe tener al menos 6 años para poder ser registrado" });
+      return;
+    }
+
+    const category = assignCategory(age);
+
+    const member = await membersService.create({
+      ...parsedMember.data,
+      age,
+      category,
+    });
     res.status(201).json({ message: "Alumno creado correctamente", member });
   } catch (error) {
     if (error instanceof Error) {
@@ -125,10 +139,20 @@ export const updateMember = async (
       return;
     }
 
-    const member = await membersService.update(
-      parsedId.data,
-      parsedMember.data
-    );
+    const age = calculateAge(parsedMember.data.birth_date);
+
+    if(age < 6){
+      res.status(400).json({ error: "La edad del alumno debe ser al menos 6 años" });
+      return;
+    }
+
+    const category = assignCategory(age);
+
+    const member = await membersService.update(parsedId.data, {
+      ...parsedMember.data,
+      age,
+      category,
+    });
     if (!member) {
       res.status(404).json({ error: "Alumno no encontrado" });
       return;
@@ -177,25 +201,22 @@ export const registerMemberToTournament = async (
   res: Response
 ): Promise<void> => {
   try {
-    const results: Record<string, number> = {};
-    const params = { mid: req.params.mid, tid: req.params.tid };
-
-    for (const [key, value] of Object.entries(params)) {
-      const parsed = IdDTO.safeParse(Number(value));
-      if (!parsed.success) {
-        const allMessages = parseErrors(parsed.error.issues);
-        res.status(400).json({ error: allMessages });
-        return;
-      }
-      results[key] = parsed.data;
+    const parsedMemberId = IdDTO.safeParse(Number(req.params.mid));
+    if (!parsedMemberId.success) {
+      const allMessages = parseErrors(parsedMemberId.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+    const parsedTournamentId = IdDTO.safeParse(Number(req.params.tid));
+    if (!parsedTournamentId.success) {
+      const allMessages = parseErrors(parsedTournamentId.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
     }
 
-    const memberId = results.mid;
-    const tournamentId = results.tid;
-
     const member = await membersService.registerToTournament(
-      memberId,
-      tournamentId
+      parsedMemberId.data,
+      parsedTournamentId.data
     );
     if (!member) {
       res.status(404).json({ error: "Alumno y/o torneo no encontrado" });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IdDTO } from "./id.schema";
-import { BirthDateDTO } from './date.schema';
+import { BirthDateDTO } from "./date.schema";
 
 export const CreateMemberDTO = z.object({
   full_name: z
@@ -8,9 +8,16 @@ export const CreateMemberDTO = z.object({
     .min(3, "El nombre debe tener al menos 3 caracteres")
     .max(255, "El nombre debe como máximo 255 caracteres"),
   birth_date: BirthDateDTO,
-  age: z.number().int("La edad debe ser un número entero").nonnegative("La edad no puede ser negativa"),
-  category: z.string(),
   id_gym: IdDTO,
+  dni: z
+    .number()
+    .int("El DNI debe ser un número entero")
+    .nonnegative("El DNI no puede ser negativo")
+    .min(7, "El DNI debe tener al menos 7 caracteres"),
+  id_level: z
+    .number()
+    .int("El ID de nivel debe ser un número entero")
+    .nonnegative("El ID de nivel no puede ser negativo"),
 });
 
 export const MemberDTO = CreateMemberDTO.extend({
@@ -20,8 +27,6 @@ export const MemberDTO = CreateMemberDTO.extend({
 export const UpdateMemberDTO = MemberDTO.pick({
   full_name: true,
   birth_date: true,
-  age: true,
-  category: true,
   id_gym: true,
 });
 
