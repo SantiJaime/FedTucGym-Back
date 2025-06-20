@@ -1,6 +1,7 @@
 import { DatabaseError } from "pg";
 import pool from "../database/db.config";
 import type { Member } from "../schemas/members.shema";
+import  { calcularEdadYCategoria } from "../utils/categories";
 
 export default class MembersService {
   public async getAll(): Promise<Member[]> {
@@ -36,18 +37,20 @@ export default class MembersService {
     }
   }
 
-  public async create(member: CreateMember): Promise<Member> {
-    try {
-      const { full_name, birth_date, age, category, id_gym, dni, id_level } = member;
-      const { rows } = await pool.query(
-        "INSERT INTO members (full_name, birth_date, age, category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [full_name, birth_date, age, category, id_gym, dni, id_level]
-      );
-      return rows[0];
-    } catch (error) {
-      throw error;
-    }
+public async create(member: CreateMember): Promise<Member> {
+  try {
+    const { full_name, birth_date, id_gym, dni, id_level } = member;
+    const { edad, categoria } = calcularEdadYCategoria(birth_date);
+
+    const { rows } = await pool.query(
+      "INSERT INTO members (full_name, birth_date, age, category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+      [full_name, birth_date, edad, categoria, id_gym, dni, id_level]
+    );
+    return rows[0];
+  } catch (error) {
+    throw error;
   }
+}
 
   public async update(
     id: number,

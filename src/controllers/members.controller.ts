@@ -3,6 +3,7 @@ import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
 import { assignCategory, calculateAge, parseErrors } from "../utils/utils";
 import { CreateMemberDTO, UpdateMemberDTO } from "../schemas/members.shema";
+import { calcularEdadYCategoria } from "../utils/categories";
 
 const membersService = new MembersService();
 
@@ -96,19 +97,17 @@ export const createMember = async (
       return;
     }
 
-    const age = calculateAge(parsedMember.data.birth_date);
+    const { edad, categoria } = calcularEdadYCategoria(parsedMember.data.birth_date);
 
-    if(age < 6){
+    if (edad < 6) {
       res.status(400).json({ error: "El alumno debe tener al menos 6 años para poder ser registrado" });
       return;
     }
 
-    const category = assignCategory(age);
-
     const member = await membersService.create({
       ...parsedMember.data,
-      age,
-      category,
+      age: edad,
+      category: categoria,
     });
     res.status(201).json({ message: "Alumno creado correctamente", member });
   } catch (error) {
