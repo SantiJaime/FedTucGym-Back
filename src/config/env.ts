@@ -21,4 +21,5 @@ export const env = {
   JWT_REFRESH_SECRET: getEnvVariable('JWT_REFRESH_SECRET'),
   COOKIE_SECRET: getEnvVariable('COOKIE_SECRET'),
   PGSCHEMA: getEnvVariable('PGSCHEMA'),
+  NODE_ENV: getEnvVariable('NODE_ENV'),
 };

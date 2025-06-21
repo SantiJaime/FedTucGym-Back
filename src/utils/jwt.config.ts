@@ -1,4 +1,4 @@
-import jwt, { SignOptions, type JwtPayload } from "jsonwebtoken";
+import jwt, { type SignOptions, type JwtPayload } from "jsonwebtoken";
 
 interface Payload {
   userId: number;

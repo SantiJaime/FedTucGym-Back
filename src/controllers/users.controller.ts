@@ -5,14 +5,16 @@ import {
   LoginUserDTO,
   UpdateUserDTO,
 } from "../schemas/users.schema";
-import { hashPassword } from "../utils/bcrypt";
-import { hashToken, parseErrors } from "../utils/utils";
+import { hashPassword, hashToken } from "../utils/bcrypt";
+import { parseErrors } from "../utils/utils";
 import { comparePassword } from "../utils/bcrypt";
 import { generateToken, verifyToken } from "../utils/jwt.config";
 import { IdDTO } from "../schemas/id.schema";
 import { env } from "../config/env";
 
 const userService = new UserService();
+
+const NODE_ENV_PRODUCTION = env.NODE_ENV === "production";
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
   const { refreshToken } = req.signedCookies;
@@ -37,17 +39,17 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     if (!isRefreshTokenValid) {
       res
         .status(401)
-        .json({ error: "Sesión expirada. Por favor, vuelva a iniciar sesión" });
+        .json({ error: "Sesión expirada. Por favor, vuelva a iniciar sesión", redirect: true });
       res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "none",
+        secure: NODE_ENV_PRODUCTION,
+        sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
         signed: true,
       });
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "none",
+        secure: NODE_ENV_PRODUCTION,
+        sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
         signed: true,
       });
       return;
@@ -62,33 +64,11 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       env.JWT_SECRET as string,
       60 * 60
     );
-    const newRefreshToken = generateToken(
-      {
-        userId: payload.userId,
-        role: payload.role,
-        full_name: payload.full_name,
-      },
-      env.JWT_REFRESH_SECRET as string,
-      60 * 60 * 24 * 7
-    );
-    const hashedNewRefreshToken = hashToken(newRefreshToken);
-    await userService.updateRefreshToken({
-      oldToken: hashedToken,
-      id: payload.userId,
-      newToken: hashedNewRefreshToken,
-    });
     res.cookie("accessToken", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: NODE_ENV_PRODUCTION,
+      sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
       maxAge: 1 * 60 * 60 * 1000,
-      signed: true,
-    });
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
       signed: true,
     });
     res.status(200).json({ message: "Sesión extendida correctamente" });
@@ -131,34 +111,34 @@ export const login = async (req: Request, res: Response) => {
   }
 
   const payload = { userId: user.id, role: user.role, full_name };
-  const token = generateToken(payload, env.JWT_SECRET as string, 60 * 60);
+  const accessToken = generateToken(payload, env.JWT_SECRET as string, 30 * 60);
   const refreshToken = generateToken(
     payload,
     env.JWT_REFRESH_SECRET as string,
-    60 * 60 * 24 * 7
+    60 * 60 * 24
   );
 
   const hashedToken = hashToken(refreshToken);
 
   await userService.saveToken(hashedToken, user.id);
 
-  res.cookie("accessToken", token, {
+  res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 1 * 60 * 60 * 1000,
+    secure: NODE_ENV_PRODUCTION,
+    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    maxAge: 30 * 60 * 1000,
     signed: true,
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: NODE_ENV_PRODUCTION,
+    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000,
     signed: true,
   });
   res
     .status(200)
-    .json({ message: "Sesión iniciada correctamente", userId: user.id });
+    .json({ message: "Sesión iniciada correctamente", userId: user.id, logged: true });
 };
 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {

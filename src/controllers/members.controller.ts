@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
 import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
-import { assignCategory, calculateAge, parseErrors } from "../utils/utils";
+import { parseErrors } from "../utils/utils";
 import { CreateMemberDTO, UpdateMemberDTO } from "../schemas/members.shema";
-import { calcularEdadYCategoria } from "../utils/categories";
+import { calculateAgeAndCategory } from "../utils/categories";
 
 const membersService = new MembersService();
 
@@ -97,17 +97,24 @@ export const createMember = async (
       return;
     }
 
-    const { edad, categoria } = calcularEdadYCategoria(parsedMember.data.birth_date);
+    const { age, category } = calculateAgeAndCategory(
+      parsedMember.data.birth_date
+    );
 
-    if (edad < 6) {
-      res.status(400).json({ error: "El alumno debe tener al menos 6 años para poder ser registrado" });
+    if (age < 6) {
+      res
+        .status(400)
+        .json({
+          error:
+            "El alumno debe tener al menos 6 años para poder ser registrado",
+        });
       return;
     }
 
     const member = await membersService.create({
       ...parsedMember.data,
-      age: edad,
-      category: categoria,
+      age,
+      category,
     });
     res.status(201).json({ message: "Alumno creado correctamente", member });
   } catch (error) {
@@ -138,14 +145,16 @@ export const updateMember = async (
       return;
     }
 
-    const age = calculateAge(parsedMember.data.birth_date);
+    const { age, category } = calculateAgeAndCategory(
+      parsedMember.data.birth_date
+    );
 
-    if(age < 6){
-      res.status(400).json({ error: "La edad del alumno debe ser al menos 6 años" });
+    if (age < 6) {
+      res
+        .status(400)
+        .json({ error: "La edad del alumno debe ser al menos 6 años" });
       return;
     }
-
-    const category = assignCategory(age);
 
     const member = await membersService.update(parsedId.data, {
       ...parsedMember.data,
