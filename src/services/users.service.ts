@@ -80,8 +80,13 @@ export default class UserService {
     try {
       const createdAt = new Date();
       const expiresAt = new Date(
-        createdAt.getTime() + 7 * 24 * 60 * 60 * 1000
+        createdAt.getTime() + 24 * 60 * 60 * 1000
       ).toISOString();
+
+      await pool.query(
+        "DELETE FROM refresh_tokens WHERE id_user = $1 AND expires_at <= NOW()",
+        [id]
+      );
 
       await pool.query(
         "INSERT INTO refresh_tokens (token, id_user, created_at, expires_at) VALUES ($1, $2, $3, $4)",
@@ -94,39 +99,12 @@ export default class UserService {
 
   public async validateToken(token: string, id: number): Promise<boolean> {
     try {
-      const { rows, rowCount } = await pool.query(
+      const { rowCount } = await pool.query(
         "SELECT * FROM refresh_tokens WHERE token = $1 AND id_user = $2 AND expires_at > NOW()",
         [token, id]
       );
 
-      if (rowCount === 0) {
-        return false;
-      }
-
-      const tokenData = rows[0];
-      const expiresAt = new Date(tokenData.expires_at);
-      const now = new Date();
-
-      if (expiresAt <= now) {
-        await pool.query(
-          "DELETE FROM refresh_tokens WHERE token = $1 AND id_user = $2",
-          [token, id]
-        );
-        return false;
-      }
- 
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  public async updateRefreshToken({ id, oldToken, newToken } : UpdateTokenParams): Promise<void> {
-    try {
-      await pool.query(
-        "UPDATE refresh_tokens SET token = $1 WHERE id_user = $2 AND token = $3",
-        [newToken, id, oldToken]
-      );
+      return !!rowCount && rowCount > 0;
     } catch (error) {
       throw error;
     }
