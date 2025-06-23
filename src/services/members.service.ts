@@ -2,6 +2,17 @@ import { DatabaseError } from "pg";
 import pool from "../database/db.config";
 import type { Member } from "../schemas/members.shema";
 
+
+export const borrarInscripcionesSinPago = async (): Promise<void> => {
+  await pool.query(`
+    DELETE FROM member_tournaments mt
+    USING tournaments t
+    WHERE mt.id_tournament = t.id
+      AND mt.paid = false
+      AND CURRENT_DATE > t.inscription_date_end
+  `);
+};
+
 export default class MembersService {
   public async getAll(): Promise<Member[]> {
     try {
