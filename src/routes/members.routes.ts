@@ -19,7 +19,7 @@ router.get(
   authMiddleware(["Gimnasio", "Administrador"]),
   getOneMember
 );
-router.post("/", /*authMiddleware(["Gimnasio", "Administrador"]),*/ createMember);
+router.post("/", authMiddleware(["Gimnasio", "Administrador"]), createMember);
 router.post(
   "/:mid/tournament/:tid",
   authMiddleware(["Gimnasio", "Administrador"]),
