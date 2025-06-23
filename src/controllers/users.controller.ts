@@ -39,7 +39,10 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     if (!isRefreshTokenValid) {
       res
         .status(401)
-        .json({ error: "Sesión expirada. Por favor, vuelva a iniciar sesión", redirect: true });
+        .json({
+          error: "Sesión expirada. Por favor, vuelva a iniciar sesión",
+          redirect: true,
+        });
       res.clearCookie("accessToken", {
         httpOnly: true,
         secure: NODE_ENV_PRODUCTION,
@@ -98,7 +101,7 @@ export const login = async (req: Request, res: Response) => {
       .json({ error: "Nombre de usuario y/o contraseña incorrectos" });
     return;
   }
-
+  console.log(user);
   const validPassword = await comparePassword(
     password,
     user.password as string
@@ -138,7 +141,11 @@ export const login = async (req: Request, res: Response) => {
   });
   res
     .status(200)
-    .json({ message: "Sesión iniciada correctamente", userId: user.id, logged: true });
+    .json({
+      message: "Sesión iniciada correctamente",
+      userId: user.id,
+      logged: true,
+    });
 };
 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {
@@ -277,4 +284,20 @@ export const deleteUser = async (
     }
     res.status(500).json({ error: "Error desconocido" });
   }
+};
+
+export const logout = (_req: Request, res: Response) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: NODE_ENV_PRODUCTION,
+    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+  });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: NODE_ENV_PRODUCTION,
+    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+  });
+
+  res.status(200).json({ message: "Sesión cerrada correctamente" });
 };
