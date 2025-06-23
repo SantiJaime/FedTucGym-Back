@@ -32,7 +32,7 @@ pool
     console.error("❌ Error al conectar a PostgreSQL:", err);
   });
 
-  cron.schedule("0 2 * * *", async () => {
+  cron.schedule("* * * * *", async () => {
   try {
     await borrarInscripcionesSinPago();
     console.log("Inscripciones no pagas eliminadas automáticamente");
