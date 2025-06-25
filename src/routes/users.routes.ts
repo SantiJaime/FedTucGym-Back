@@ -10,15 +10,16 @@ import {
   refreshAccessToken,
   logout,
 } from "../controllers/users.controller";
+import { refreshAuthMiddleware } from '../middleware/refreshAuth';
 
 const router = Router();
 
 router.get("/", authMiddleware(["Administrador"]), getUsers);
-router.get("/:id", authMiddleware(["Administrador"]), getOneUser);
+router.get("/:id", authMiddleware(["Administrador", "Administrador", "Juez"]), getOneUser);
 router.post("/", authMiddleware(["Administrador"]), createUser);
 router.post("/login", login);
 router.post("/logout", logout);
-router.post("/refresh-token", refreshAccessToken)
+router.post("/refresh-token", refreshAuthMiddleware(["Administrador", "Gimnasio", "Juez"]), refreshAccessToken)
 router.patch(
   "/:id",
   authMiddleware(["Administrador", "Gimnasio", "Juez"]),

@@ -8,7 +8,7 @@ import {
 import { hashPassword, hashToken } from "../utils/bcrypt";
 import { parseErrors } from "../utils/utils";
 import { comparePassword } from "../utils/bcrypt";
-import { generateToken, verifyToken } from "../utils/jwt.config";
+import { generateToken } from "../utils/jwt.config";
 import { IdDTO } from "../schemas/id.schema";
 import { env } from "../config/env";
 
@@ -18,71 +18,66 @@ const NODE_ENV_PRODUCTION = env.NODE_ENV === "production";
 
 export const refreshAccessToken = async (req: Request, res: Response) => {
   const { refreshToken } = req.signedCookies;
+
   if (!refreshToken) {
     res.status(401).json({ error: "Acceso denegado" });
     return;
   }
 
-  try {
-    const payload = verifyToken(refreshToken, env.JWT_REFRESH_SECRET as string);
-    if (!payload) {
-      res.status(401).json({ error: "Acceso denegado" });
-      return;
-    }
+  const payload = req.user; 
 
-    const hashedToken = hashToken(refreshToken);
-    const isRefreshTokenValid = await userService.validateToken(
-      hashedToken,
-      payload.userId
-    );
+  if(!payload){
+    res.status(401).json({ error: "Acceso denegado, no se encontró el usuario" });
+    return;
+  }
 
-    if (!isRefreshTokenValid) {
-      res
-        .status(401)
-        .json({
-          error: "Sesión expirada. Por favor, vuelva a iniciar sesión",
-          redirect: true,
-        });
-      res.clearCookie("accessToken", {
-        httpOnly: true,
-        secure: NODE_ENV_PRODUCTION,
-        sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
-        signed: true,
-      });
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: NODE_ENV_PRODUCTION,
-        sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
-        signed: true,
-      });
-      return;
-    }
+  const hashedToken = hashToken(refreshToken);
+  const isRefreshTokenValid = await userService.validateToken(
+    hashedToken,
+    payload.userId
+  );
 
-    const token = generateToken(
-      {
-        userId: payload.userId,
-        role: payload.role,
-        full_name: payload.full_name,
-      },
-      env.JWT_SECRET as string,
-      60 * 60
-    );
-    res.cookie("accessToken", token, {
+  if (!isRefreshTokenValid) {
+    res.clearCookie("accessToken", {
       httpOnly: true,
       secure: NODE_ENV_PRODUCTION,
       sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
-      maxAge: 1 * 60 * 60 * 1000,
       signed: true,
     });
-    res.status(200).json({ message: "Sesión extendida correctamente" });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-      return;
-    }
-    res.status(500).json({ error: "Error desconocido" });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: NODE_ENV_PRODUCTION,
+      sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+      signed: true,
+    });
+    res.status(401).json({
+      error: "Sesión expirada. Por favor, vuelva a iniciar sesión",
+      redirect: true,
+    });
+    return;
   }
+
+  const token = generateToken(
+    {
+      userId: payload.userId,
+      role: payload.role,
+      full_name: payload.full_name,
+    },
+    env.JWT_SECRET as string,
+    60 * 60
+  );
+
+  res.cookie("accessToken", token, {
+    httpOnly: true,
+    secure: NODE_ENV_PRODUCTION,
+    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    maxAge: 1 * 60 * 60 * 1000,
+    signed: true,
+  });
+
+  res.status(200).json({ message: "Sesión extendida correctamente" });
 };
+
 export const login = async (req: Request, res: Response) => {
   const parsedUser = LoginUserDTO.safeParse(req.body);
 
@@ -101,7 +96,7 @@ export const login = async (req: Request, res: Response) => {
       .json({ error: "Nombre de usuario y/o contraseña incorrectos" });
     return;
   }
-  console.log(user);
+
   const validPassword = await comparePassword(
     password,
     user.password as string
@@ -143,8 +138,7 @@ export const login = async (req: Request, res: Response) => {
     .status(200)
     .json({
       message: "Sesión iniciada correctamente",
-      userId: user.id,
-      logged: true,
+      userInfo: { userId: user.id, logged: true, role: user.role, full_name },
     });
 };
 
