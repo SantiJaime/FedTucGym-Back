@@ -4,12 +4,13 @@ import morgan from "morgan";
 import cors from "cors";
 import pool from "./database/db.config";
 import cron from "node-cron";
-
 import userRouter from "./routes/users.routes";
 import tournamentsRouter from "./routes/tournaments.routes";
 import membersRouter from "./routes/members.routes";
 import { env } from './config/env';
 import { borrarInscripcionesSinPago } from "./services/members.service";
+import { actualizarCategoriasMiembros } from "./services/members.service";
+
 
 const app = express();
 
@@ -35,12 +36,21 @@ pool
     console.error("❌ Error al conectar a PostgreSQL:", err);
   });
 
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("* 2 * * *", async () => {
   try {
     await borrarInscripcionesSinPago();
     console.log("Inscripciones no pagas eliminadas automáticamente");
   } catch (error) {
     console.error("Error al limpiar inscripciones no pagas:", error);
+  }
+});
+
+cron.schedule("0 2 1 1 *", async () => {
+  try {
+    await actualizarCategoriasMiembros();
+    console.log("Categorías de miembros actualizadas automáticamente");
+  } catch (error) {
+    console.error("Error al actualizar categorías de miembros:", error);
   }
 });
 

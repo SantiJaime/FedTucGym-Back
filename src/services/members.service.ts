@@ -1,6 +1,19 @@
 import { DatabaseError } from "pg";
 import pool from "../database/db.config";
 import type { Member } from "../schemas/members.shema";
+import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
+
+
+export const actualizarCategoriasMiembros = async (): Promise<void> => {
+  const { rows: miembros } = await pool.query("SELECT id, birth_date FROM members");
+  for (const miembro of miembros) {
+    const { category } = calcularEdadYCategoriaAl31Dic(miembro.birth_date);
+    await pool.query(
+      "UPDATE members SET category = $1 WHERE id = $2",
+      [category, miembro.id]
+    );
+  }
+};
 
 
 export const borrarInscripcionesSinPago = async (): Promise<void> => {

@@ -1,37 +1,29 @@
-interface AgeCategoryReturn {
-  age: number;
-  category: string;
-}
+export type Categoria =
+  | "Pre Mini"
+  | "Mini"
+  | "Pre Infantil"
+  | "Infantil"
+  | "Juvenil"
+  | "Mayores"
+  | "Sin categoría";
 
-export function calculateAgeAndCategory(birthDate: string): AgeCategoryReturn {
-  const today = new Date();
-  const birth = new Date(birthDate);
-
-  let age = today.getFullYear() - birth.getFullYear();
-
-  const actualMonth = today.getMonth();
-  const birthMonth = birth.getMonth();
-
-  const actualDay = today.getDate();
-  const birthDay = birth.getDate();
-
-  if (
-    actualMonth < birthMonth ||
-    (actualMonth === birthMonth && actualDay < birthDay)
-  ) {
+export function calcularEdadYCategoriaAl31Dic(birth_date : string): { age: number; category: Categoria } {
+  const nacimiento = new Date(birth_date);
+  const hoy = new Date();
+  const finDeAno = new Date(hoy.getFullYear(), 11, 31);
+  let age = finDeAno.getFullYear() - nacimiento.getFullYear();
+  const m = finDeAno.getMonth() - nacimiento.getMonth();
+  if (m < 0 || (m === 0 && finDeAno.getDate() < nacimiento.getDate())) {
     age--;
   }
-  const CATEGORIES = [
-    { min: 6, max: 7, name: "Pre Mini" },
-    { min: 8, max: 9, name: "Mini" },
-    { min: 10, max: 11, name: "Pre infantil" },
-    { min: 12, max: 13, name: "Infantil" },
-    { min: 14, max: 15, name: "Juvenil" },
-    { min: 16, max: Infinity, name: "Mayores" },
-  ];
 
-  const { name } = CATEGORIES.find(
-    (cat) => age >= cat.min && age <= cat.max
-  ) || { name: "Sin categoría" };
-  return { age, category: name };
+  let category: Categoria = "Sin categoría";
+  if (age >= 6 && age <= 7) category = "Pre Mini";
+  else if (age >= 8 && age <= 9) category = "Mini";
+  else if (age >= 10 && age <= 11) category = "Pre Infantil";
+  else if (age >= 12 && age <= 13) category = "Infantil";
+  else if (age >= 14 && age <= 15) category = "Juvenil";
+  else if (age >= 16) category = "Mayores";
+
+  return { age, category };
 }

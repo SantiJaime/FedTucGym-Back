@@ -3,7 +3,7 @@ import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
 import { parseErrors } from "../utils/utils";
 import { CreateMemberDTO, UpdateMemberDTO } from "../schemas/members.shema";
-import { calculateAgeAndCategory } from "../utils/categories";
+import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 
 const membersService = new MembersService();
 
@@ -97,7 +97,7 @@ export const createMember = async (
       return;
     }
 
-    const { age, category } = calculateAgeAndCategory(
+    const { age, category } = calcularEdadYCategoriaAl31Dic(
       parsedMember.data.birth_date
     );
 
@@ -145,7 +145,7 @@ export const updateMember = async (
       return;
     }
 
-    const { age, category } = calculateAgeAndCategory(
+    const { age, category } = calcularEdadYCategoriaAl31Dic(
       parsedMember.data.birth_date
     );
 
