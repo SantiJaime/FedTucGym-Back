@@ -14,7 +14,7 @@ export default class UserService {
   public async getByName(full_name: string): Promise<UserResponse | undefined> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM users WHERE full_name = $1",
+        "SELECT u.id, u.full_name, u.password, r.name AS role FROM users u LEFT JOIN roles r ON u.id_role = r.id WHERE full_name = $1",
         [full_name]
       );
       return rows[0];

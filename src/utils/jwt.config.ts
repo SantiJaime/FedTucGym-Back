@@ -7,7 +7,6 @@ interface Payload {
 }
 type CustomJwtPayload = JwtPayload & Payload;
 
-
 export const generateToken = (payload: Payload, secret: string, expiration: number = 60 * 60): string => {
     const options: SignOptions = {
     expiresIn: expiration
