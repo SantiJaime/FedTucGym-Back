@@ -5,10 +5,10 @@ import { env } from '../config/env';
 const ROLES = ["Administrador", "Juez", "Gimnasio"] as const;
 type UserRole = (typeof ROLES)[number];
 
-export const authMiddleware = (requiredRoles: UserRole[]) => {
+export const refreshAuthMiddleware = (requiredRoles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const signedAccessToken = req.signedCookies.accessToken;
-    if (!signedAccessToken) {
+    const signedRefreshToken = req.signedCookies.refreshToken;
+    if (!signedRefreshToken) {
       res
         .status(401)
         .json({ error: "No estás autorizado, no has iniciado sesión" });
@@ -17,8 +17,8 @@ export const authMiddleware = (requiredRoles: UserRole[]) => {
 
     try {
       const payloadUser = verifyToken(
-        signedAccessToken,
-        env.JWT_SECRET as string
+        signedRefreshToken,
+        env.JWT_REFRESH_SECRET as string
       );
 
       const isValidRole = (role: string): role is UserRole => {
