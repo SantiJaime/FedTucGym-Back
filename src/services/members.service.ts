@@ -3,18 +3,16 @@ import pool from "../database/db.config";
 import type { Member } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 
-
 export const actualizarCategoriasMiembros = async (): Promise<void> => {
   const { rows: miembros } = await pool.query("SELECT id, birth_date FROM members");
   for (const miembro of miembros) {
-    const { category } = calcularEdadYCategoriaAl31Dic(miembro.birth_date);
+    const { id_category } = calcularEdadYCategoriaAl31Dic(miembro.birth_date);
     await pool.query(
-      "UPDATE members SET category = $1 WHERE id = $2",
-      [category, miembro.id]
+      "UPDATE members SET id_category = $1 WHERE id = $2",
+      [id_category, miembro.id]
     );
   }
 };
-
 
 export const borrarInscripcionesSinPago = async (): Promise<void> => {
   await pool.query(`
@@ -27,9 +25,9 @@ export const borrarInscripcionesSinPago = async (): Promise<void> => {
 };
 
 export default class MembersService {
-  public async getAll(): Promise<Member[]> {
+  public async getAll(): Promise<FullMemberInfo[]> {
     try {
-      const { rows } = await pool.query("SELECT * FROM members");
+      const { rows } = await pool.query("SELECT * FROM members_view");
       return rows;
     } catch (error) {
       throw error;
@@ -39,7 +37,7 @@ export default class MembersService {
   public async getById(id: number): Promise<Member | undefined> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM members WHERE id_member = $1",
+        "SELECT * FROM members WHERE id = $1",
         [id]
       );
       return rows[0];
@@ -48,10 +46,10 @@ export default class MembersService {
     }
   }
 
-  public async getByGymId(id: number): Promise<Member[]> {
+  public async getByGymId(id: number): Promise<FullMemberInfo[]> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM members WHERE id_gym = $1",
+        "SELECT * FROM members_view WHERE id_gym = $1",
         [id]
       );
       return rows;
@@ -62,11 +60,11 @@ export default class MembersService {
 
 public async create(member: CreateMember): Promise<Member> {
   try {
-    const { full_name, birth_date, id_gym, dni, id_level, age, category } = member;
+    const { full_name, birth_date, id_gym, dni, id_level, age, id_category } = member;
 
     const { rows } = await pool.query(
-      "INSERT INTO members (full_name, birth_date, age, category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-      [full_name, birth_date, age, category, id_gym, dni, id_level]
+      "INSERT INTO members (full_name, birth_date, age, id_category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+      [full_name, birth_date, age, id_category, id_gym, dni, id_level]
     );
     return rows[0];
   } catch (error) {
@@ -79,10 +77,10 @@ public async create(member: CreateMember): Promise<Member> {
     member: CreateMember
   ): Promise<Member | undefined> {
     try {
-      const { full_name, birth_date, age, category, id_gym } = member;
+      const { full_name, birth_date, age, id_category, id_gym } = member;
       const { rows } = await pool.query(
-        "UPDATE members SET full_name = $1, birth_date = $2, age = $3, category = $4, id_gym = $5 WHERE id_member = $6 RETURNING *",
-        [full_name, birth_date, age, category, id_gym, id]
+        "UPDATE members SET full_name = $1, birth_date = $2, age = $3, id_category = $4, id_gym = $5 WHERE id = $6 RETURNING *",
+        [full_name, birth_date, age, id_category, id_gym, id]
       );
       return rows[0];
     } catch (error) {
@@ -93,7 +91,7 @@ public async create(member: CreateMember): Promise<Member> {
   public async delete(id: number): Promise<boolean> {
     try {
       const { rowCount } = await pool.query(
-        "DELETE FROM members WHERE id_member = $1",
+        "DELETE FROM members WHERE id = $1",
         [id]
       );
       return !!rowCount && rowCount > 0;

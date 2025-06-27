@@ -1,5 +1,9 @@
-import { Pool } from "pg";
+import { Pool, types } from "pg";
 import { env } from "../config/env";
+
+const DATE_OID = 1082;
+
+types.setTypeParser(DATE_OID, (val) => val);
 
 const pool = new Pool({
   host: env.PGHOST,

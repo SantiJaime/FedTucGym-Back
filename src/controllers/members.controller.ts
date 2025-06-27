@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
 import { parseErrors } from "../utils/utils";
-import { CreateMemberDTO, UpdateMemberDTO } from "../schemas/members.shema";
+import { CreateMemberDTO } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 
 const membersService = new MembersService();
@@ -30,7 +30,7 @@ export const getMembersByGym = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedId = IdDTO.safeParse(Number(req.params.id));
+    const parsedId = IdDTO.safeParse(Number(req.params.gid));
     if (!parsedId.success) {
       const allMessages = parseErrors(parsedId.error.issues);
       res.status(400).json({ error: allMessages });
@@ -97,11 +97,11 @@ export const createMember = async (
       return;
     }
 
-    const { age, category } = calcularEdadYCategoriaAl31Dic(
+    const { age, id_category } = calcularEdadYCategoriaAl31Dic(
       parsedMember.data.birth_date
     );
 
-    if (age < 6) {
+    if (age < 6 || id_category === null) {
       res
         .status(400)
         .json({
@@ -114,7 +114,7 @@ export const createMember = async (
     const member = await membersService.create({
       ...parsedMember.data,
       age,
-      category,
+      id_category,
     });
     res.status(201).json({ message: "Alumno creado correctamente", member });
   } catch (error) {
@@ -138,18 +138,18 @@ export const updateMember = async (
       return;
     }
 
-    const parsedMember = UpdateMemberDTO.safeParse(req.body);
+    const parsedMember = CreateMemberDTO.safeParse(req.body);
     if (!parsedMember.success) {
       const allMessages = parseErrors(parsedMember.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
 
-    const { age, category } = calcularEdadYCategoriaAl31Dic(
+    const { age, id_category } = calcularEdadYCategoriaAl31Dic(
       parsedMember.data.birth_date
     );
 
-    if (age < 6) {
+    if (age < 6 || id_category === null) {
       res
         .status(400)
         .json({ error: "La edad del alumno debe ser al menos 6 años" });
@@ -159,7 +159,7 @@ export const updateMember = async (
     const member = await membersService.update(parsedId.data, {
       ...parsedMember.data,
       age,
-      category,
+      id_category,
     });
     if (!member) {
       res.status(404).json({ error: "Alumno no encontrado" });
