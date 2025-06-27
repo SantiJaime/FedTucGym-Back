@@ -1,13 +1,13 @@
-export type Categoria =
-  | "Pre Mini"
-  | "Mini"
-  | "Pre Infantil"
-  | "Infantil"
-  | "Juvenil"
-  | "Mayores"
-  | "Sin categoría";
+type Category = {
+  id: CategoryID;
+  min: number;
+  max: number;
+};
 
-export function calcularEdadYCategoriaAl31Dic(birth_date : string): { age: number; category: Categoria } {
+export function calcularEdadYCategoriaAl31Dic(birth_date: string): {
+  age: number;
+  id_category: CategoryID;
+} {
   const nacimiento = new Date(birth_date);
   const hoy = new Date();
   const finDeAno = new Date(hoy.getFullYear(), 11, 31);
@@ -16,14 +16,16 @@ export function calcularEdadYCategoriaAl31Dic(birth_date : string): { age: numbe
   if (m < 0 || (m === 0 && finDeAno.getDate() < nacimiento.getDate())) {
     age--;
   }
+  const CATEGORIES: Category[] = [
+    { id: 1, min: 6, max: 7 },
+    { id: 2, min: 8, max: 9 },
+    { id: 3, min: 10, max: 11 },
+    { id: 4, min: 12, max: 13 },
+    { id: 5, min: 14, max: 15 },
+    { id: 6, min: 16, max: 100 },
+  ];
 
-  let category: Categoria = "Sin categoría";
-  if (age >= 6 && age <= 7) category = "Pre Mini";
-  else if (age >= 8 && age <= 9) category = "Mini";
-  else if (age >= 10 && age <= 11) category = "Pre Infantil";
-  else if (age >= 12 && age <= 13) category = "Infantil";
-  else if (age >= 14 && age <= 15) category = "Juvenil";
-  else if (age >= 16) category = "Mayores";
+  const category = CATEGORIES.find((c) => age >= c.min && age <= c.max);
 
-  return { age, category };
+  return { age, id_category: category ? category.id : null };
 }
