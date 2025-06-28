@@ -7,6 +7,8 @@ import cron from "node-cron";
 import userRouter from "./routes/users.routes";
 import tournamentsRouter from "./routes/tournaments.routes";
 import membersRouter from "./routes/members.routes";
+import puntajesRouter from "./routes/scores.routes";
+
 import { env } from './config/env';
 import { borrarInscripcionesSinPago } from "./services/members.service";
 import { actualizarCategoriasMiembros } from "./services/members.service";
@@ -26,6 +28,7 @@ app.use(cookieParser(env.COOKIE_SECRET));
 app.use("/users", userRouter);
 app.use("/tournaments", tournamentsRouter);
 app.use("/members", membersRouter);
+app.use("/puntajes", puntajesRouter);
 
 pool
   .query("SELECT NOW()")
