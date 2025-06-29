@@ -4,13 +4,15 @@ import type { Member } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 
 export const actualizarCategoriasMiembros = async (): Promise<void> => {
-  const { rows: miembros } = await pool.query("SELECT id, birth_date FROM members");
+  const { rows: miembros } = await pool.query(
+    "SELECT id, birth_date FROM members"
+  );
   for (const miembro of miembros) {
     const { id_category } = calcularEdadYCategoriaAl31Dic(miembro.birth_date);
-    await pool.query(
-      "UPDATE members SET id_category = $1 WHERE id = $2",
-      [id_category, miembro.id]
-    );
+    await pool.query("UPDATE members SET id_category = $1 WHERE id = $2", [
+      id_category,
+      miembro.id,
+    ]);
   }
 };
 
@@ -36,41 +38,42 @@ export default class MembersService {
 
   public async getById(id: number): Promise<Member | undefined> {
     try {
-      const { rows } = await pool.query(
-        "SELECT * FROM members WHERE id = $1",
-        [id]
-      );
+      const { rows } = await pool.query("SELECT * FROM members WHERE id = $1", [
+        id,
+      ]);
       return rows[0];
     } catch (error) {
       throw error;
     }
   }
 
-  public async getByGymId(id: number): Promise<FullMemberInfo[]> {
+  public async getByGymId(
+    query: string,
+    values: any[]
+  ): Promise<FullMemberInfo[]> {
     try {
-      const { rows } = await pool.query(
-        "SELECT * FROM members_view WHERE id_gym = $1",
-        [id]
-      );
+      const { rows } = await pool.query(query, values);
+      console.log(query, values);
       return rows;
     } catch (error) {
       throw error;
     }
   }
 
-public async create(member: CreateMember): Promise<Member> {
-  try {
-    const { full_name, birth_date, id_gym, dni, id_level, age, id_category } = member;
+  public async create(member: CreateMember): Promise<Member> {
+    try {
+      const { full_name, birth_date, id_gym, dni, id_level, age, id_category } =
+        member;
 
-    const { rows } = await pool.query(
-      "INSERT INTO members (full_name, birth_date, age, id_category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-      [full_name, birth_date, age, id_category, id_gym, dni, id_level]
-    );
-    return rows[0];
-  } catch (error) {
-    throw error;
+      const { rows } = await pool.query(
+        "INSERT INTO members (full_name, birth_date, age, id_category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+        [full_name, birth_date, age, id_category, id_gym, dni, id_level]
+      );
+      return rows[0];
+    } catch (error) {
+      throw error;
+    }
   }
-}
 
   public async update(
     id: number,

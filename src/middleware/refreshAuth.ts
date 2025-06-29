@@ -11,7 +11,7 @@ export const refreshAuthMiddleware = (requiredRoles: UserRole[]) => {
     if (!signedRefreshToken) {
       res
         .status(401)
-        .json({ error: "No estás autorizado, no has iniciado sesión" });
+        .json({ error: "La sesión ha expirado, por favor vuelve a iniciar sesión", redirect: true });
       return;
     }
 

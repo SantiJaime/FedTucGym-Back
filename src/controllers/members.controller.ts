@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
-import { parseErrors } from "../utils/utils";
-import { CreateMemberDTO } from "../schemas/members.shema";
+import { parseErrors, parseFilters, toNumberOrUndefined } from "../utils/utils";
+import { CreateMemberDTO, FilterMembersDTO } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 
 const membersService = new MembersService();
@@ -36,6 +36,18 @@ export const getMembersByGym = async (
       res.status(400).json({ error: allMessages });
       return;
     }
+    console.log(req.query);
+    const parsedFilters = FilterMembersDTO.safeParse({
+      ...req.query,
+      id_category: toNumberOrUndefined(req.query.id_category),
+      id_level: toNumberOrUndefined(req.query.id_level),
+      dni: toNumberOrUndefined(req.query.dni),
+    });
+    if (!parsedFilters.success) {
+      const allMessages = parseErrors(parsedFilters.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
     if (
       req.user?.role !== "Administrador" &&
       parsedId.data !== req.user?.userId
@@ -45,7 +57,9 @@ export const getMembersByGym = async (
       });
       return;
     }
-    const members = await membersService.getByGymId(parsedId.data);
+
+    const { query, values } = parseFilters(parsedFilters.data, parsedId.data);
+    const members = await membersService.getByGymId(query, values);
     res
       .status(200)
       .json({ message: "Alumnos obtenidos correctamente", members });
@@ -102,12 +116,9 @@ export const createMember = async (
     );
 
     if (age < 6 || id_category === null) {
-      res
-        .status(400)
-        .json({
-          error:
-            "El alumno debe tener al menos 6 años para poder ser registrado",
-        });
+      res.status(400).json({
+        error: "El alumno debe tener al menos 6 años para poder ser registrado",
+      });
       return;
     }
 
