@@ -8,6 +8,6 @@ export async function registrarPuntaje(id_member: number, id_tournament: number,
 }
 
 export async function getAllPuntajes() {
-  const { rows } = await pool.query("SELECT * FROM puntajes");
+  const { rows } = await pool.query("SELECT * FROM puntajes ORDER BY puntaje DESC");
   return rows;
 }
