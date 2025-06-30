@@ -6,3 +6,8 @@ export async function registrarPuntaje(id_member: number, id_tournament: number,
     [id_member, id_tournament, puntaje]
   );
 }
+
+export async function getAllPuntajes() {
+  const { rows } = await pool.query("SELECT * FROM puntajes");
+  return rows;
+}
