@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { postPuntaje } from "../controllers/scores.controller";
+import { getAllScores, getScoresByTournament, postPuntaje } from "../controllers/scores.controller";
 
 const router = Router();
 
-router.post("/", postPuntaje);
+router.get("/", getAllScores);
+router.get("/:tid", getScoresByTournament);
+router.post("/:mid/tournament/:tid", postPuntaje);
 
 export default router;
