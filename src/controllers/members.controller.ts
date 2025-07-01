@@ -36,7 +36,6 @@ export const getMembersByGym = async (
       res.status(400).json({ error: allMessages });
       return;
     }
-    console.log(req.query);
     const parsedFilters = FilterMembersDTO.safeParse({
       ...req.query,
       id_category: toNumberOrUndefined(req.query.id_category),
