@@ -53,7 +53,6 @@ export default class MembersService {
   ): Promise<FullMemberInfo[]> {
     try {
       const { rows } = await pool.query(query, values);
-      console.log(query, values);
       return rows;
     } catch (error) {
       throw error;
