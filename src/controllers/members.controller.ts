@@ -4,6 +4,7 @@ import { IdDTO } from "../schemas/id.schema";
 import { parseErrors, parseFilters, toNumberOrUndefined } from "../utils/utils";
 import { CreateMemberDTO, FilterMembersDTO } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
+import { RegisterMembersTournamentsDTO } from "../schemas/members_tournaments.schema";
 
 const membersService = new MembersService();
 
@@ -36,7 +37,6 @@ export const getMembersByGym = async (
       res.status(400).json({ error: allMessages });
       return;
     }
-    console.log(req.query);
     const parsedFilters = FilterMembersDTO.safeParse({
       ...req.query,
       id_category: toNumberOrUndefined(req.query.id_category),
@@ -220,22 +220,19 @@ export const registerMemberToTournament = async (
   res: Response
 ): Promise<void> => {
   try {
-    const parsedMemberId = IdDTO.safeParse(Number(req.params.mid));
-    if (!parsedMemberId.success) {
-      const allMessages = parseErrors(parsedMemberId.error.issues);
-      res.status(400).json({ error: allMessages });
-      return;
-    }
-    const parsedTournamentId = IdDTO.safeParse(Number(req.params.tid));
-    if (!parsedTournamentId.success) {
-      const allMessages = parseErrors(parsedTournamentId.error.issues);
+    const parsedIds = RegisterMembersTournamentsDTO.safeParse({
+      id_member: Number(req.params.mid),
+      id_tournament: Number(req.params.tid),
+    });
+    if (!parsedIds.success) {
+      const allMessages = parseErrors(parsedIds.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
 
     const member = await membersService.registerToTournament(
-      parsedMemberId.data,
-      parsedTournamentId.data
+      parsedIds.data.id_member,
+      parsedIds.data.id_tournament
     );
     if (!member) {
       res.status(404).json({ error: "Alumno y/o torneo no encontrado" });
