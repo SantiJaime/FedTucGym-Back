@@ -3,6 +3,7 @@ import TournamentService from "../services/tournaments.service";
 import { CreateTournamentDTO } from "../schemas/tournaments.schema";
 import { formatDateForDaterange, parseErrors, subtractDays } from "../utils/utils";
 import { IdDTO } from "../schemas/id.schema";
+import { GetMembersTournamentsDTO } from '../schemas/members_tournaments.schema';
 
 const tournamentService = new TournamentService();
 
@@ -162,6 +163,82 @@ export const deleteTournament = async (
     }
 
     res.status(200).json({ message: "Torneo eliminado correctamente" });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const getMembersTournaments = async (req: Request, res: Response) => {
+  try {
+    const parsedIds = GetMembersTournamentsDTO.safeParse({
+      id_gym: Number(req.params.gid),
+      id_tournament: Number(req.params.tid),
+    });
+    if (!parsedIds.success) {
+      const allMessages = parseErrors(parsedIds.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+    if (
+      parsedIds.data.id_gym !== req.user?.userId &&
+      req.user?.role !== "Administrador"
+    ) {
+      res.status(403).json({
+        error:
+          "No tienes permiso para ver los alumnos registrados a este torneo",
+      });
+      return;
+    }
+    const membersTournaments = await tournamentService.getMembersTournament(
+      req.user?.userId,
+      parsedIds.data.id_tournament
+    );
+    res.status(200).json({
+      message: "Alumnos registrados al torneo obtenidos correctamente",
+      membersTournaments,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const getMembersNotInTournaments = async (req: Request, res: Response) => {
+  try {
+    const parsedIds = GetMembersTournamentsDTO.safeParse({
+      id_gym: Number(req.params.gid),
+      id_tournament: Number(req.params.tid),
+    });
+    if (!parsedIds.success) {
+      const allMessages = parseErrors(parsedIds.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+    if (
+      parsedIds.data.id_gym !== req.user?.userId &&
+      req.user?.role !== "Administrador"
+    ) {
+      res.status(403).json({
+        error:
+          "No tienes permiso para ver los alumnos registrados a este torneo",
+      });
+      return;
+    }
+    const members = await tournamentService.getMembersNotInTournament(
+      req.user?.userId,
+      parsedIds.data.id_tournament
+    );
+    res.status(200).json({
+      message: "Alumnos NO registrados al torneo obtenidos correctamente",
+      members,
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

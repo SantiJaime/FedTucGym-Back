@@ -2,6 +2,7 @@ import { DatabaseError } from "pg";
 import pool from "../database/db.config";
 import type { Member } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
+import { MembersTournaments } from '../schemas/members_tournaments.schema';
 
 export const actualizarCategoriasMiembros = async (): Promise<void> => {
   const { rows: miembros } = await pool.query(
@@ -102,7 +103,7 @@ export default class MembersService {
     }
   }
 
-  public async registerToTournament(memberId: number, tournamentId: number) {
+  public async registerToTournament(memberId: number, tournamentId: number): Promise<MembersTournaments> {
     try {
       const { rows } = await pool.query(
         "INSERT INTO members_tournaments (id_member, id_tournament) VALUES ($1, $2, $3) RETURNING *",

@@ -49,6 +49,5 @@ export const parseFilters = (filters: MembersFilter, gymId: number) => {
     values.length > 1
       ? baseQuery + " AND " + conditions.join(" AND ") + " ORDER BY id ASC"
       : baseQuery;
-  console.log(query, values);
   return { query, values };
 };

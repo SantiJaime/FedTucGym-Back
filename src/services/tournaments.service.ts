@@ -1,4 +1,5 @@
 import pool from "../database/db.config";
+import { MembersTournamentsView } from "../schemas/members_tournaments.schema";
 import type { Tournament } from "../schemas/tournaments.schema";
 
 export default class TournamentService {
@@ -73,6 +74,35 @@ export default class TournamentService {
         [id]
       );
       return !!rowCount && rowCount > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+  public async getMembersTournament(
+    id_gym: number,
+    id_tournament: number
+  ): Promise<MembersTournamentsView[]> {
+    try {
+      const { rows } = await pool.query(
+        "SELECT * FROM members_tournaments_view WHERE id_tournament = $1 AND id_gym = $2",
+        [id_tournament, id_gym]
+      );
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async getMembersNotInTournament(
+    id_gym: number,
+    id_tournament: number
+  ): Promise<FullMemberInfo[]> {
+    try {
+      const { rows } = await pool.query(
+        "SELECT * FROM members_view WHERE id NOT IN (SELECT id_member FROM members_tournaments WHERE id_tournament = $1) AND id_gym = $2",
+        [id_tournament, id_gym]
+      );
+      return rows;
     } catch (error) {
       throw error;
     }
