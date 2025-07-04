@@ -15,6 +15,12 @@ export const MembersTournamentsDTO = RegisterMembersTournamentsDTO.extend({
   paid: z.boolean(),
 });
 
+export const UpdatePaidMembersTournamentsDTO = z.object({
+  id_member: IdDTO,
+  id_tournament: IdDTO,
+  paid: z.boolean(),
+});
+
 export type CreateMembersTournaments = z.infer<
   typeof RegisterMembersTournamentsDTO
 >;
@@ -32,3 +38,7 @@ const MembersTournaments = z.object({
 export type MembersTournaments = z.infer<typeof MembersTournamentsDTO>;
 
 export type MembersTournamentsView = z.infer<typeof MembersTournaments>;
+
+export type UpdatePaidMembersTournaments = z.infer<
+  typeof UpdatePaidMembersTournamentsDTO
+>;

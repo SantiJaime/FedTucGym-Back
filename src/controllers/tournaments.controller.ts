@@ -1,9 +1,16 @@
 import type { Request, Response } from "express";
 import TournamentService from "../services/tournaments.service";
 import { CreateTournamentDTO } from "../schemas/tournaments.schema";
-import { formatDateForDaterange, parseErrors, subtractDays } from "../utils/utils";
+import {
+  formatDateForDaterange,
+  parseErrors,
+  subtractDays,
+} from "../utils/utils";
 import { IdDTO } from "../schemas/id.schema";
-import { GetMembersTournamentsDTO } from '../schemas/members_tournaments.schema';
+import {
+  GetMembersTournamentsDTO,
+  UpdatePaidMembersTournamentsDTO,
+} from "../schemas/members_tournaments.schema";
 
 const tournamentService = new TournamentService();
 
@@ -25,7 +32,10 @@ export const getAllTournaments = async (
   }
 };
 
-export const getTournamentsByDate = async (_req: Request, res: Response): Promise<void> => {
+export const getTournamentsByDate = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const tournaments = await tournamentService.getByDate();
     res
@@ -38,7 +48,7 @@ export const getTournamentsByDate = async (_req: Request, res: Response): Promis
     }
     res.status(500).json({ error: "Error desconocido" });
   }
-}
+};
 
 export const getOneTournament = async (
   req: Request,
@@ -87,7 +97,11 @@ export const createTournament = async (
     const parsedDate = formatDateForDaterange({ startDate, endDate });
     const inscriptionDateEnd = subtractDays(startDate);
 
-    const tournament = await tournamentService.create({ name, date_range: parsedDate, inscriptionDateEnd });
+    const tournament = await tournamentService.create({
+      name,
+      date_range: parsedDate,
+      inscriptionDateEnd,
+    });
     res
       .status(201)
       .json({ message: "Torneo creado correctamente", tournament });
@@ -126,7 +140,7 @@ export const updateTournament = async (
     const tournament = await tournamentService.update(parsedId.data, {
       name,
       date_range: parsedDate,
-      inscriptionDateEnd
+      inscriptionDateEnd,
     });
 
     if (!tournament) {
@@ -210,7 +224,10 @@ export const getMembersTournaments = async (req: Request, res: Response) => {
   }
 };
 
-export const getMembersNotInTournaments = async (req: Request, res: Response) => {
+export const getMembersNotInTournaments = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const parsedIds = GetMembersTournamentsDTO.safeParse({
       id_gym: Number(req.params.gid),
@@ -238,6 +255,42 @@ export const getMembersNotInTournaments = async (req: Request, res: Response) =>
     res.status(200).json({
       message: "Alumnos NO registrados al torneo obtenidos correctamente",
       members,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const updatePayMemberTournament = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const parsedData = UpdatePaidMembersTournamentsDTO.safeParse({
+      id_member: Number(req.params.mid),
+      id_tournament: Number(req.params.tid),
+      paid: req.body.paid,
+    });
+    if (!parsedData.success) {
+      const allMessages = parseErrors(parsedData.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+
+    const updatedMemberTournament = await tournamentService.updatePayTournament(
+      parsedData.data
+    );
+    if (!updatedMemberTournament) {
+      res.status(404).json({ error: "Torneo y/o alumno no encontrado(s)" });
+      return;
+    }
+
+    res.status(200).json({
+      message: "Alumno actualizado correctamente",
     });
   } catch (error) {
     if (error instanceof Error) {

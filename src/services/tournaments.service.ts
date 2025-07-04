@@ -1,5 +1,8 @@
 import pool from "../database/db.config";
-import { MembersTournamentsView } from "../schemas/members_tournaments.schema";
+import {
+  MembersTournamentsView,
+  UpdatePaidMembersTournaments,
+} from "../schemas/members_tournaments.schema";
 import type { Tournament } from "../schemas/tournaments.schema";
 
 export default class TournamentService {
@@ -84,7 +87,7 @@ export default class TournamentService {
   ): Promise<MembersTournamentsView[]> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM members_tournaments_view WHERE id_tournament = $1 AND id_gym = $2",
+        "SELECT * FROM get_members_tournaments($1, $2);",
         [id_tournament, id_gym]
       );
       return rows;
@@ -99,10 +102,25 @@ export default class TournamentService {
   ): Promise<FullMemberInfo[]> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM members_view WHERE id NOT IN (SELECT id_member FROM members_tournaments WHERE id_tournament = $1) AND id_gym = $2",
+        "SELECT mv.* FROM members_view mv LEFT JOIN members_tournaments mt ON mv.id = mt.id_member AND mt.id_tournament = $1 WHERE mt.id_member IS NULL AND mv.id_gym = $2",
         [id_tournament, id_gym]
       );
       return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async updatePayTournament(
+    data: UpdatePaidMembersTournaments
+  ): Promise<boolean> {
+    try {
+      const { id_member, id_tournament, paid } = data;
+      const { rowCount } = await pool.query(
+        "UPDATE members_tournaments SET paid = $1 WHERE id_member = $2 AND id_tournament = $3",
+        [paid, id_member, id_tournament]
+      );
+      return !!rowCount && rowCount > 0;
     } catch (error) {
       throw error;
     }

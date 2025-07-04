@@ -7,6 +7,7 @@ import {
   getMembersTournaments,
   getOneTournament,
   getTournamentsByDate,
+  updatePayMemberTournament,
   updateTournament,
 } from "../controllers/tournaments.controller";
 import { authMiddleware } from "../middleware/auth";
@@ -41,6 +42,11 @@ router.get(
 );
 router.post("/", authMiddleware(["Administrador"]), createTournament);
 router.put("/:id", authMiddleware(["Administrador"]), updateTournament);
+router.patch(
+  "/:tid/member/:mid",
+  authMiddleware(["Administrador", "Gimnasio"]),
+  updatePayMemberTournament
+);
 router.delete("/:id", authMiddleware(["Administrador"]), deleteTournament);
 
 export default router;

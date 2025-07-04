@@ -21,7 +21,12 @@ export const parseErrors = (errors: ZodIssue[]) => {
 export const toNumberOrUndefined = (val: any) =>
   val === undefined ? undefined : Number(val);
 
-export const parseFilters = (filters: MembersFilter, gymId: number) => {
+export const parseFilters = (
+  filters: MembersFilter,
+  gymId: number,
+  limit?: number,
+  offset?: number
+) => {
   let baseQuery = "SELECT * FROM members_view WHERE id_gym = $1";
   let values: any[] = [gymId];
   let conditions: string[] = [];
@@ -40,14 +45,29 @@ export const parseFilters = (filters: MembersFilter, gymId: number) => {
     conditions.push(`id_level = $${values.length + 1}`);
     values.push(filters.id_level);
   }
+
   if (filters.dni) {
     conditions.push(`dni = $${values.length + 1}`);
     values.push(filters.dni);
   }
 
-  const query =
-    values.length > 1
-      ? baseQuery + " AND " + conditions.join(" AND ") + " ORDER BY id ASC"
-      : baseQuery;
+  let query = baseQuery;
+  if (conditions.length) {
+    query += " AND " + conditions.join(" AND ");
+  }
+
+  query += " ORDER BY id ASC";
+
+  if (typeof limit === "number") {
+    values.push(limit);
+    query += ` LIMIT $${values.length}`;
+  }
+
+  if (typeof offset === "number") {
+    values.push(offset);
+    query += ` OFFSET $${values.length}`;
+  }
+
   return { query, values };
 };
+
