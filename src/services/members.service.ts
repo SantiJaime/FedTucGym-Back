@@ -106,7 +106,7 @@ export default class MembersService {
   public async registerToTournament(memberId: number, tournamentId: number): Promise<MembersTournaments> {
     try {
       const { rows } = await pool.query(
-        "INSERT INTO members_tournaments (id_member, id_tournament) VALUES ($1, $2, $3) RETURNING *",
+        "INSERT INTO members_tournaments (id_member, id_tournament) VALUES ($1, $2) RETURNING *",
         [memberId, tournamentId]
       );
       return rows[0];
