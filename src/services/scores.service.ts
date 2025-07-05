@@ -1,6 +1,6 @@
 import { DatabaseError } from "pg";
 import pool from "../database/db.config";
-import { FullScoreInfo, Score } from "../schemas/scores.schema";
+import { FullScoreInfo, GetScores, GetScoresByGym, Score } from "../schemas/scores.schema";
 
 export default class ScoresService {
   public async create(data: Omit<Score, "id">): Promise<void> {
@@ -35,10 +35,40 @@ export default class ScoresService {
     }
   }
 
+  public async getByCategoryLevelAndGym(
+    DataIds: GetScoresByGym
+  ): Promise<FullScoreInfo[]> {
+    try {
+      const { id_category, id_level, id_gym, id_tournament } = DataIds;
+      const { rows } = await pool.query(
+        "SELECT * FROM get_scores_by_category_level_and_gym($1, $2, $3, $4)",
+        [id_category, id_level, id_gym, id_tournament]
+      );
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async getByCategoryAndLevel(
+    DataIds: GetScores
+  ): Promise<FullScoreInfo[]> {
+    try {
+      const { id_category, id_level, id_tournament } = DataIds;
+      const { rows } = await pool.query(
+        "SELECT * FROM get_scores_by_category_and_level($1, $2, $3)",
+        [id_category, id_level, id_tournament]
+      );
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   public async getByTournament(id: number): Promise<FullScoreInfo[]> {
     try {
       const { rows } = await pool.query(
-        "SELECT * FROM scores_view WHERE id_tournament = $1 ORDER BY puntaje DESC",
+        "SELECT * FROM get_scores_by_tournament($1)",
         [id]
       );
       return rows;
