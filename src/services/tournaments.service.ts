@@ -1,5 +1,7 @@
 import pool from "../database/db.config";
 import {
+  GetMembersTournamentByGym,
+  GetMembersTournaments,
   MembersTournamentsView,
   UpdatePaidMembersTournaments,
 } from "../schemas/members_tournaments.schema";
@@ -81,14 +83,29 @@ export default class TournamentService {
       throw error;
     }
   }
-  public async getMembersTournament(
-    id_gym: number,
-    id_tournament: number
+  public async getMembersTournamentByGym(
+    parsedIds: GetMembersTournamentByGym
   ): Promise<MembersTournamentsView[]> {
     try {
+      const { id_tournament, id_category, id_level, id_gym } = parsedIds;
       const { rows } = await pool.query(
-        "SELECT * FROM get_members_tournaments($1, $2);",
-        [id_tournament, id_gym]
+        "SELECT * FROM get_members_tournaments_by_gym($1, $2, $3, $4);",
+        [id_tournament, id_category, id_level, id_gym]
+      );
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async getMembersTournamentByCategoryAndLevel(
+    parsedIds: GetMembersTournaments
+  ): Promise<MembersTournamentsView[]> {
+    try {
+      const { id_tournament, id_category, id_level } = parsedIds;
+      const { rows } = await pool.query(
+        "SELECT * FROM get_members_tournaments_by_category_and_level($1, $2, $3);",
+        [id_tournament, id_category, id_level]
       );
       return rows;
     } catch (error) {
@@ -97,13 +114,13 @@ export default class TournamentService {
   }
 
   public async getMembersNotInTournament(
-    id_gym: number,
-    id_tournament: number
+    parsedIds: GetMembersTournamentByGym
   ): Promise<FullMemberInfo[]> {
     try {
+      const { id_tournament, id_gym, id_category, id_level } = parsedIds;
       const { rows } = await pool.query(
-        "SELECT mv.* FROM members_view mv LEFT JOIN members_tournaments mt ON mv.id = mt.id_member AND mt.id_tournament = $1 WHERE mt.id_member IS NULL AND mv.id_gym = $2",
-        [id_tournament, id_gym]
+        "SELECT * FROM get_available_members_for_tournament($1, $2, $3, $4)",
+        [id_tournament, id_category, id_level, id_gym]
       );
       return rows;
     } catch (error) {
