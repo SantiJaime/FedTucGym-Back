@@ -7,8 +7,13 @@ export const RegisterMembersTournamentsDTO = z.object({
 });
 
 export const GetMembersTournamentsDTO = z.object({
-  id_gym: IdDTO,
   id_tournament: IdDTO,
+  id_category: IdDTO,
+  id_level: IdDTO,
+});
+
+export const GetMembersTournamentsByGymDTO = GetMembersTournamentsDTO.extend({
+  id_gym: IdDTO,
 });
 
 export const MembersTournamentsDTO = RegisterMembersTournamentsDTO.extend({
@@ -41,4 +46,10 @@ export type MembersTournamentsView = z.infer<typeof MembersTournaments>;
 
 export type UpdatePaidMembersTournaments = z.infer<
   typeof UpdatePaidMembersTournamentsDTO
+>;
+
+export type GetMembersTournaments = z.infer<typeof GetMembersTournamentsDTO>;
+
+export type GetMembersTournamentByGym = z.infer<
+  typeof GetMembersTournamentsByGymDTO
 >;

@@ -8,6 +8,7 @@ import {
 } from "../utils/utils";
 import { IdDTO } from "../schemas/id.schema";
 import {
+  GetMembersTournamentsByGymDTO,
   GetMembersTournamentsDTO,
   UpdatePaidMembersTournamentsDTO,
 } from "../schemas/members_tournaments.schema";
@@ -186,11 +187,16 @@ export const deleteTournament = async (
   }
 };
 
-export const getMembersTournaments = async (req: Request, res: Response) => {
+export const getMembersTournamentsByGym = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const parsedIds = GetMembersTournamentsDTO.safeParse({
+    const parsedIds = GetMembersTournamentsByGymDTO.safeParse({
       id_gym: Number(req.params.gid),
       id_tournament: Number(req.params.tid),
+      id_level: Number(req.params.lid),
+      id_category: Number(req.params.cid),
     });
     if (!parsedIds.success) {
       const allMessages = parseErrors(parsedIds.error.issues);
@@ -207,10 +213,8 @@ export const getMembersTournaments = async (req: Request, res: Response) => {
       });
       return;
     }
-    const membersTournaments = await tournamentService.getMembersTournament(
-      req.user?.userId,
-      parsedIds.data.id_tournament
-    );
+    const membersTournaments =
+      await tournamentService.getMembersTournamentByGym(parsedIds.data);
     res.status(200).json({
       message: "Alumnos registrados al torneo obtenidos correctamente",
       membersTournaments,
@@ -229,9 +233,11 @@ export const getMembersNotInTournaments = async (
   res: Response
 ) => {
   try {
-    const parsedIds = GetMembersTournamentsDTO.safeParse({
+    const parsedIds = GetMembersTournamentsByGymDTO.safeParse({
       id_gym: Number(req.params.gid),
       id_tournament: Number(req.params.tid),
+      id_level: Number(req.params.lid),
+      id_category: Number(req.params.cid),
     });
     if (!parsedIds.success) {
       const allMessages = parseErrors(parsedIds.error.issues);
@@ -249,12 +255,43 @@ export const getMembersNotInTournaments = async (
       return;
     }
     const members = await tournamentService.getMembersNotInTournament(
-      req.user?.userId,
-      parsedIds.data.id_tournament
+      parsedIds.data
     );
     res.status(200).json({
       message: "Alumnos NO registrados al torneo obtenidos correctamente",
       members,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const GetMembersTournamentByCategoryAndLevel = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const parsedIds = GetMembersTournamentsDTO.safeParse({
+      id_category: Number(req.params.cid),
+      id_level: Number(req.params.lid),
+      id_tournament: Number(req.params.tid),
+    });
+    if (!parsedIds.success) {
+      const allMessages = parseErrors(parsedIds.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+    const membersTournaments =
+      await tournamentService.getMembersTournamentByCategoryAndLevel(
+        parsedIds.data
+      );
+    res.status(200).json({
+      message: "Alumnos registrados al torneo obtenidos correctamente",
+      membersTournaments,
     });
   } catch (error) {
     if (error instanceof Error) {

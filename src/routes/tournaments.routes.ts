@@ -4,7 +4,8 @@ import {
   deleteTournament,
   getAllTournaments,
   getMembersNotInTournaments,
-  getMembersTournaments,
+  GetMembersTournamentByCategoryAndLevel,
+  getMembersTournamentsByGym,
   getOneTournament,
   getTournamentsByDate,
   updatePayMemberTournament,
@@ -25,12 +26,17 @@ router.get(
   getTournamentsByDate
 );
 router.get(
-  "/:tid/gym/:gid",
+  "/:tid/category/:cid/level/:lid/gym/:gid",
   authMiddleware(["Administrador", "Gimnasio"]),
-  getMembersTournaments
+  getMembersTournamentsByGym
 );
 router.get(
-  "/not-in/:tid/gym/:gid",
+  "/:tid/category/:cid/level/:lid",
+  authMiddleware(["Administrador", "Gimnasio"]),
+  GetMembersTournamentByCategoryAndLevel
+);
+router.get(
+  "/not-in/:tid/category/:cid/level/:lid/gym/:gid",
   authMiddleware(["Administrador", "Gimnasio"]),
   getMembersNotInTournaments
 );

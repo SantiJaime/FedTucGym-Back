@@ -1,15 +1,25 @@
 import { DatabaseError } from "pg";
 import pool from "../database/db.config";
-import { FullScoreInfo, GetScores, GetScoresByGym, Score } from "../schemas/scores.schema";
+import {
+  FullScoreInfo,
+  GetScores,
+  GetScoresByGym,
+  Score,
+} from "../schemas/scores.schema";
 
 export default class ScoresService {
-  public async create(data: Omit<Score, "id">): Promise<void> {
+  public async create(data: Omit<Score, "id">): Promise<Score> {
     try {
       const { id_member, id_tournament, puntaje } = data;
-      await pool.query(
-        "INSERT INTO puntajes (id_member, id_tournament, puntaje) VALUES ($1, $2, $3)",
+      const { rows } = await pool.query(
+        "INSERT INTO puntajes (id_member, id_tournament, puntaje) VALUES ($1, $2, $3) RETURNING *",
         [id_member, id_tournament, puntaje]
       );
+      await pool.query(
+        "UPDATE members_tournaments SET scored = true WHERE id_member = $1 AND id_tournament = $2",
+        [id_member, id_tournament]
+      );
+      return rows[0];
     } catch (error) {
       if (error instanceof DatabaseError) {
         if (error.code === "23505") {
