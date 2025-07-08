@@ -116,7 +116,6 @@ export const postPuntaje = async (req: Request, res: Response) => {
       return;
     }
     const score = await scoreService.create(parsedScore.data);
-    console.log(score)
     res
       .status(201)
       .json({ message: "Puntaje registrado correctamente", score });
