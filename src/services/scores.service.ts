@@ -51,9 +51,10 @@ export default class ScoresService {
     try {
       const { id_category, id_level, id_gym, id_tournament } = DataIds;
       const { rows } = await pool.query(
-        "SELECT * FROM get_scores_by_category_level_and_gym($1, $2, $3, $4)",
+        "SELECT * FROM get_scores_by_category_gym_and_level($1, $2, $3, $4)",
         [id_category, id_level, id_gym, id_tournament]
       );
+      console.log(rows)
       return rows;
     } catch (error) {
       throw error;

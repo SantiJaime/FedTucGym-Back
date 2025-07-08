@@ -27,6 +27,16 @@ export default class TournamentService {
       throw error;
     }
   }
+  public async getPastByDate(): Promise<Tournament[]> {
+    try {
+      const { rows } = await pool.query(
+        "SELECT * FROM tournaments WHERE inscription_date_end < CURRENT_DATE ORDER BY inscription_date_end ASC"
+      );
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   public async getById(id: number): Promise<Tournament | undefined> {
     try {
