@@ -27,7 +27,8 @@ export type GetScoresByGym = z.infer<typeof GetScoresByGymDTO>;
 export type Score = z.infer<typeof ScoreDTO>;
 export type FullScoreInfo = {
   id: number;
-  member: string;
+  member_name: string;
+  member_dni: number;
   id_tournament: number;
   id_category: number;
   id_gym: number;

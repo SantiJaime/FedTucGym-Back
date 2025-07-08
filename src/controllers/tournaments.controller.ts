@@ -12,6 +12,7 @@ import {
   GetMembersTournamentsDTO,
   UpdatePaidMembersTournamentsDTO,
 } from "../schemas/members_tournaments.schema";
+import { DatabaseError } from 'pg';
 
 const tournamentService = new TournamentService();
 
@@ -44,6 +45,24 @@ export const getTournamentsByDate = async (
       .json({ message: "Torneos obtenidos correctamente", tournaments });
   } catch (error) {
     if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const getPastTournamentsByDate = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const tournaments = await tournamentService.getPastByDate();
+    res
+      .status(200)
+      .json({ message: "Torneos obtenidos correctamente", tournaments });
+  } catch (error) {
+    if (error instanceof Error || error instanceof DatabaseError) {
       res.status(500).json({ error: error.message });
       return;
     }
