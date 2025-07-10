@@ -54,7 +54,6 @@ export default class ScoresService {
         "SELECT * FROM get_scores_by_category_gym_and_level($1, $2, $3, $4)",
         [id_category, id_level, id_gym, id_tournament]
       );
-      console.log(rows)
       return rows;
     } catch (error) {
       throw error;

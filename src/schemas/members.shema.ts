@@ -36,6 +36,11 @@ export const FilterMembersDTO = z.object({
     .min(7, "El DNI debe tener al menos 7 caracteres")
     .max(8, "El DNI debe tener como máximo 8 caracteres")
     .optional(),
+  page: z
+    .number()
+    .int("La página debe ser un número entero")
+    .nonnegative("La página no puede ser negativa")
+    .optional(),
 });
 
 export type Member = z.infer<typeof MemberDTO>;

@@ -2,7 +2,7 @@ import { DatabaseError } from "pg";
 import pool from "../database/db.config";
 import type { Member } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
-import { MembersTournaments } from '../schemas/members_tournaments.schema';
+import { MembersTournaments } from "../schemas/members_tournaments.schema";
 
 export const actualizarCategoriasMiembros = async (): Promise<void> => {
   const { rows: miembros } = await pool.query(
@@ -50,11 +50,20 @@ export default class MembersService {
 
   public async getByGymId(
     query: string,
-    values: any[]
-  ): Promise<FullMemberInfo[]> {
+    values: any[],
+    countQuery: string,
+    countValues: any[]
+  ): Promise<{ data: FullMemberInfo[]; total: number }> {
     try {
-      const { rows } = await pool.query(query, values);
-      return rows;
+      const [dataResult, countResult] = await Promise.all([
+        pool.query(query, values),
+        pool.query(countQuery, countValues),
+      ]);
+
+      const data = dataResult.rows;
+      const total = parseInt(countResult.rows[0].count, 10);
+
+      return { data, total };
     } catch (error) {
       throw error;
     }
@@ -103,7 +112,10 @@ export default class MembersService {
     }
   }
 
-  public async registerToTournament(memberId: number, tournamentId: number): Promise<MembersTournaments> {
+  public async registerToTournament(
+    memberId: number,
+    tournamentId: number
+  ): Promise<MembersTournaments> {
     try {
       const { rows } = await pool.query(
         "INSERT INTO members_tournaments (id_member, id_tournament) VALUES ($1, $2) RETURNING *",
