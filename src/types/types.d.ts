@@ -23,4 +23,5 @@ interface FullMemberInfo {
   gym: string;
   dni: number;
   level: string;
+  total_count: number;
 }

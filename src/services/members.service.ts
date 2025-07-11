@@ -1,4 +1,4 @@
-import { DatabaseError } from "pg";
+import { DatabaseError, type QueryResult } from "pg";
 import pool from "../database/db.config";
 import type { Member } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
@@ -55,7 +55,10 @@ export default class MembersService {
     countValues: any[]
   ): Promise<{ data: FullMemberInfo[]; total: number }> {
     try {
-      const [dataResult, countResult] = await Promise.all([
+      const [dataResult, countResult]: [
+        QueryResult<FullMemberInfo>,
+        QueryResult<{ count: string }>
+      ] = await Promise.all([
         pool.query(query, values),
         pool.query(countQuery, countValues),
       ]);

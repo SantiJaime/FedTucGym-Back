@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { IdDTO } from "./id.schema";
 import { BirthDateDTO } from "./date.schema";
+import { PageDTO } from "./page.schema";
 
 export const CreateMemberDTO = z.object({
   full_name: z
@@ -36,11 +37,7 @@ export const FilterMembersDTO = z.object({
     .min(7, "El DNI debe tener al menos 7 caracteres")
     .max(8, "El DNI debe tener como máximo 8 caracteres")
     .optional(),
-  page: z
-    .number()
-    .int("La página debe ser un número entero")
-    .nonnegative("La página no puede ser negativa")
-    .optional(),
+  page: PageDTO,
 });
 
 export type Member = z.infer<typeof MemberDTO>;

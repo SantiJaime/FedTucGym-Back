@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdDTO } from "./id.schema";
+import { PageDTO } from "./page.schema";
 
 export const CreateScoreDTO = z.object({
   id_member: IdDTO,
@@ -15,6 +16,7 @@ export const GetScoresDTO = z.object({
   id_category: IdDTO,
   id_level: IdDTO,
   id_tournament: IdDTO,
+  page: PageDTO,
 });
 
 export const GetScoresByGymDTO = GetScoresDTO.extend({
@@ -34,4 +36,5 @@ export type FullScoreInfo = {
   id_gym: number;
   gym: string;
   puntaje: number;
+  total_count: number;
 };

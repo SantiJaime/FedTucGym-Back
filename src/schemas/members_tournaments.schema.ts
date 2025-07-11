@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdDTO } from "./id.schema";
+import { PageDTO } from "./page.schema";
 
 export const RegisterMembersTournamentsDTO = z.object({
   id_member: IdDTO,
@@ -10,6 +11,7 @@ export const GetMembersTournamentsDTO = z.object({
   id_tournament: IdDTO,
   id_category: IdDTO,
   id_level: IdDTO,
+  page: PageDTO,
 });
 
 export const GetMembersTournamentsByGymDTO = GetMembersTournamentsDTO.extend({
@@ -38,6 +40,7 @@ const MembersTournaments = z.object({
   id_gym: IdDTO,
   gym: z.string(),
   paid: z.boolean(),
+  total_count: z.number(),
 });
 
 export type MembersTournaments = z.infer<typeof MembersTournamentsDTO>;

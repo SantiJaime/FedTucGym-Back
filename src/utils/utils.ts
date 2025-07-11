@@ -29,7 +29,7 @@ export const buildMembersQuery = (
   const limit = 20;
   const offset = page && page > 0 ? (page - 1) * limit : 0;
   let baseQuery = "SELECT * FROM members_view WHERE id_gym = $1";
-  let baseCountQuery = "SELECT COUNT(*) FROM members_view WHERE id_gym = $1";
+  let baseCountQuery = "SELECT COUNT(*) FROM members WHERE id_gym = $1";
   let values: any[] = [gymId];
   let conditions: string[] = [];
 
