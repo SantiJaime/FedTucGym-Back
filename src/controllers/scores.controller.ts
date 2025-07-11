@@ -53,21 +53,33 @@ export const getScoresByCategoryAndLevel = async (
   res: Response
 ) => {
   try {
-    const parsedIds = GetScoresDTO.safeParse({
+    const parsedData = GetScoresDTO.safeParse({
       id_category: Number(req.params.cid),
       id_level: Number(req.params.lid),
       id_tournament: Number(req.params.tid),
+      page: Number(req.query.page),
     });
-    if (!parsedIds.success) {
-      const allMessages = parseErrors(parsedIds.error.issues);
+    if (!parsedData.success) {
+      const allMessages = parseErrors(parsedData.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
 
-    const scores = await scoreService.getByCategoryAndLevel(parsedIds.data);
-    res
-      .status(200)
-      .json({ message: "Tabla de puntajes obtenidos correctamente", scores });
+    const scores = await scoreService.getByCategoryAndLevel(
+      parsedData.data
+    );
+
+    const total = scores[0].total_count
+    res.status(200).json({
+      message: "Tabla de puntajes obtenidos correctamente",
+      scores,
+      pagination: {
+        total,
+        page: parsedData.data.page || 1,
+        perPage: 20,
+        totalPages: Math.ceil(total / 20),
+      },
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });
@@ -79,21 +91,33 @@ export const getScoresByCategoryAndLevel = async (
 
 export const getScoresByGym = async (req: Request, res: Response) => {
   try {
-    const parsedIds = GetScoresByGymDTO.safeParse({
+    const parsedData = GetScoresByGymDTO.safeParse({
       id_gym: Number(req.params.gid),
       id_category: Number(req.params.cid),
       id_level: Number(req.params.lid),
       id_tournament: Number(req.params.tid),
+      page: Number(req.query.page),
     });
-    if (!parsedIds.success) {
-      const allMessages = parseErrors(parsedIds.error.issues);
+    if (!parsedData.success) {
+      const allMessages = parseErrors(parsedData.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
-    const scores = await scoreService.getByCategoryLevelAndGym(parsedIds.data);
-    res
-      .status(200)
-      .json({ message: "Tabla de puntajes obtenidos correctamente", scores });
+    const scores = await scoreService.getByCategoryLevelAndGym(
+      parsedData.data
+    );
+
+    const total = scores[0].total_count
+    res.status(200).json({
+      message: "Tabla de puntajes obtenidos correctamente",
+      scores,
+      pagination: {
+        total,
+        page: parsedData.data.page,
+        perPage: 20,
+        totalPages: Math.ceil(total / 20),
+      },
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

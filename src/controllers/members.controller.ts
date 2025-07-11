@@ -1,7 +1,12 @@
 import type { Request, Response } from "express";
 import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
-import { parseErrors, parseFilters, toNumberOrUndefined } from "../utils/utils";
+import {
+  buildCountMembersQuery,
+  buildMembersQuery,
+  parseErrors,
+  toNumberOrUndefined,
+} from "../utils/utils";
 import { CreateMemberDTO, FilterMembersDTO } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 import { RegisterMembersTournamentsDTO } from "../schemas/members_tournaments.schema";
@@ -42,6 +47,7 @@ export const getMembersByGym = async (
       id_category: toNumberOrUndefined(req.query.id_category),
       id_level: toNumberOrUndefined(req.query.id_level),
       dni: toNumberOrUndefined(req.query.dni),
+      page: Number(req.query.page),
     });
     if (!parsedFilters.success) {
       const allMessages = parseErrors(parsedFilters.error.issues);
@@ -58,11 +64,31 @@ export const getMembersByGym = async (
       return;
     }
 
-    const { query, values } = parseFilters(parsedFilters.data, parsedId.data);
-    const members = await membersService.getByGymId(query, values);
-    res
-      .status(200)
-      .json({ message: "Alumnos obtenidos correctamente", members });
+    const { query, values } = buildMembersQuery(
+      parsedFilters.data,
+      parsedId.data,
+      parsedFilters.data.page
+    );
+    const { countQuery, values: countValues } = buildCountMembersQuery(
+      parsedFilters.data,
+      parsedId.data
+    );
+    const { data: members, total } = await membersService.getByGymId(
+      query,
+      values,
+      countQuery,
+      countValues
+    );
+    res.status(200).json({
+      message: "Alumnos obtenidos correctamente",
+      members,
+      pagination: {
+        total,
+        page: parsedFilters.data.page || 1,
+        perPage: 20,
+        totalPages: Math.ceil(total / 20),
+      },
+    });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

@@ -1,4 +1,4 @@
-import { DatabaseError } from "pg";
+import { DatabaseError, type QueryResult } from "pg";
 import pool from "../database/db.config";
 import {
   FullScoreInfo,
@@ -16,8 +16,8 @@ export default class ScoresService {
         [id_member, id_tournament, puntaje]
       );
       await pool.query(
-        "UPDATE members_tournaments SET scored = true WHERE id_member = $1 AND id_tournament = $2",
-        [id_member, id_tournament]
+        "UPDATE members_tournaments SET scored = $1 WHERE id_member = $2 AND id_tournament = $3",
+        [true, id_member, id_tournament]
       );
       return rows[0];
     } catch (error) {
@@ -36,7 +36,7 @@ export default class ScoresService {
 
   public async getAll(): Promise<FullScoreInfo[]> {
     try {
-      const { rows } = await pool.query(
+      const { rows }: QueryResult<FullScoreInfo> = await pool.query(
         "SELECT * FROM scores_view ORDER BY puntaje DESC"
       );
       return rows;
@@ -46,15 +46,14 @@ export default class ScoresService {
   }
 
   public async getByCategoryLevelAndGym(
-    DataIds: GetScoresByGym
+    dataIds: GetScoresByGym
   ): Promise<FullScoreInfo[]> {
     try {
-      const { id_category, id_level, id_gym, id_tournament } = DataIds;
-      const { rows } = await pool.query(
+      const { id_category, id_level, id_gym, id_tournament } = dataIds;
+      const { rows }: QueryResult<FullScoreInfo> = await pool.query(
         "SELECT * FROM get_scores_by_category_gym_and_level($1, $2, $3, $4)",
         [id_category, id_level, id_gym, id_tournament]
       );
-      console.log(rows)
       return rows;
     } catch (error) {
       throw error;
@@ -62,11 +61,12 @@ export default class ScoresService {
   }
 
   public async getByCategoryAndLevel(
-    DataIds: GetScores
+    dataIds: GetScores
   ): Promise<FullScoreInfo[]> {
     try {
-      const { id_category, id_level, id_tournament } = DataIds;
-      const { rows } = await pool.query(
+      const { id_category, id_level, id_tournament } = dataIds;
+
+      const { rows }: QueryResult<FullScoreInfo> = await pool.query(
         "SELECT * FROM get_scores_by_category_and_level($1, $2, $3)",
         [id_category, id_level, id_tournament]
       );

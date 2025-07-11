@@ -12,7 +12,7 @@ import {
   GetMembersTournamentsDTO,
   UpdatePaidMembersTournamentsDTO,
 } from "../schemas/members_tournaments.schema";
-import { DatabaseError } from 'pg';
+import { DatabaseError } from "pg";
 
 const tournamentService = new TournamentService();
 
@@ -211,19 +211,20 @@ export const getMembersTournamentsByGym = async (
   res: Response
 ) => {
   try {
-    const parsedIds = GetMembersTournamentsByGymDTO.safeParse({
+    const parsedData = GetMembersTournamentsByGymDTO.safeParse({
       id_gym: Number(req.params.gid),
       id_tournament: Number(req.params.tid),
       id_level: Number(req.params.lid),
       id_category: Number(req.params.cid),
+      page: Number(req.query.page),
     });
-    if (!parsedIds.success) {
-      const allMessages = parseErrors(parsedIds.error.issues);
+    if (!parsedData.success) {
+      const allMessages = parseErrors(parsedData.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
     if (
-      parsedIds.data.id_gym !== req.user?.userId &&
+      parsedData.data.id_gym !== req.user?.userId &&
       req.user?.role !== "Administrador"
     ) {
       res.status(403).json({
@@ -232,11 +233,36 @@ export const getMembersTournamentsByGym = async (
       });
       return;
     }
+    const offset = (parsedData.data.page - 1) * 20;
     const membersTournaments =
-      await tournamentService.getMembersTournamentByGym(parsedIds.data);
+      await tournamentService.getMembersTournamentByGym(
+        parsedData.data,
+        offset
+      );
+
+    if (membersTournaments.length === 0) {
+      res.status(200).json({
+        message: "No hay alumnos registrados al torneo",
+        membersTournaments: [],
+        pagination: {
+          total: 0,
+          page: parsedData.data.page,
+          perPage: 20,
+          totalPages: 0,
+        },
+      });
+      return;
+    }
+    const total = membersTournaments[0].total_count;
     res.status(200).json({
       message: "Alumnos registrados al torneo obtenidos correctamente",
       membersTournaments,
+      pagination: {
+        total,
+        page: parsedData.data.page,
+        perPage: 20,
+        totalPages: Math.ceil(total / 20),
+      },
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -252,19 +278,20 @@ export const getMembersNotInTournaments = async (
   res: Response
 ) => {
   try {
-    const parsedIds = GetMembersTournamentsByGymDTO.safeParse({
+    const parsedData = GetMembersTournamentsByGymDTO.safeParse({
       id_gym: Number(req.params.gid),
       id_tournament: Number(req.params.tid),
       id_level: Number(req.params.lid),
       id_category: Number(req.params.cid),
+      page: Number(req.query.page),
     });
-    if (!parsedIds.success) {
-      const allMessages = parseErrors(parsedIds.error.issues);
+    if (!parsedData.success) {
+      const allMessages = parseErrors(parsedData.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
     if (
-      parsedIds.data.id_gym !== req.user?.userId &&
+      parsedData.data.id_gym !== req.user?.userId &&
       req.user?.role !== "Administrador"
     ) {
       res.status(403).json({
@@ -273,12 +300,22 @@ export const getMembersNotInTournaments = async (
       });
       return;
     }
+    const offset = (parsedData.data.page - 1) * 20;
     const members = await tournamentService.getMembersNotInTournament(
-      parsedIds.data
+      parsedData.data,
+      offset
     );
+
+    const total = members[0].total_count;
     res.status(200).json({
       message: "Alumnos NO registrados al torneo obtenidos correctamente",
       members,
+      pagination: {
+        total,
+        page: parsedData.data.page,
+        perPage: 20,
+        totalPages: Math.ceil(total / 20),
+      },
     });
   } catch (error) {
     if (error instanceof Error) {
@@ -294,23 +331,33 @@ export const GetMembersTournamentByCategoryAndLevel = async (
   res: Response
 ) => {
   try {
-    const parsedIds = GetMembersTournamentsDTO.safeParse({
+    const parsedData = GetMembersTournamentsDTO.safeParse({
       id_category: Number(req.params.cid),
       id_level: Number(req.params.lid),
       id_tournament: Number(req.params.tid),
+      page: Number(req.query.page),
     });
-    if (!parsedIds.success) {
-      const allMessages = parseErrors(parsedIds.error.issues);
+    if (!parsedData.success) {
+      const allMessages = parseErrors(parsedData.error.issues);
       res.status(400).json({ error: allMessages });
       return;
     }
+    const offset = (parsedData.data.page - 1) * 20;
     const membersTournaments =
       await tournamentService.getMembersTournamentByCategoryAndLevel(
-        parsedIds.data
+        parsedData.data,
+        offset
       );
+    const total = membersTournaments[0].total_count;
     res.status(200).json({
       message: "Alumnos registrados al torneo obtenidos correctamente",
       membersTournaments,
+      pagination: {
+        total: total,
+        page: parsedData.data.page,
+        perPage: 20,
+        totalPages: Math.ceil(total / 20),
+      },
     });
   } catch (error) {
     if (error instanceof Error) {

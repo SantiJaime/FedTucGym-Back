@@ -1,3 +1,4 @@
+import { QueryResult } from "pg";
 import pool from "../database/db.config";
 import {
   GetMembersTournamentByGym,
@@ -94,28 +95,31 @@ export default class TournamentService {
     }
   }
   public async getMembersTournamentByGym(
-    parsedIds: GetMembersTournamentByGym
+    parsedIds: GetMembersTournamentByGym,
+    offset: number
   ): Promise<MembersTournamentsView[]> {
     try {
       const { id_tournament, id_category, id_level, id_gym } = parsedIds;
-      const { rows } = await pool.query(
-        "SELECT * FROM get_members_tournaments_by_gym($1, $2, $3, $4);",
-        [id_tournament, id_category, id_level, id_gym]
+      const { rows }: QueryResult<MembersTournamentsView> = await pool.query(
+        "SELECT * FROM get_members_tournaments_by_gym($1, $2, $3, $4, $5, $6);",
+        [id_tournament, id_category, id_level, id_gym, 20, offset]
       );
       return rows;
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
 
   public async getMembersTournamentByCategoryAndLevel(
-    parsedIds: GetMembersTournaments
+    parsedIds: GetMembersTournaments,
+    offset: number
   ): Promise<MembersTournamentsView[]> {
     try {
       const { id_tournament, id_category, id_level } = parsedIds;
-      const { rows } = await pool.query(
-        "SELECT * FROM get_members_tournaments_by_category_and_level($1, $2, $3);",
-        [id_tournament, id_category, id_level]
+      const { rows }: QueryResult<MembersTournamentsView> = await pool.query(
+        "SELECT * FROM get_members_tournaments_by_category_and_level($1, $2, $3, $4, $5);",
+        [id_tournament, id_category, id_level, 20, offset]
       );
       return rows;
     } catch (error) {
@@ -124,13 +128,14 @@ export default class TournamentService {
   }
 
   public async getMembersNotInTournament(
-    parsedIds: GetMembersTournamentByGym
+    parsedIds: GetMembersTournamentByGym,
+    offset: number
   ): Promise<FullMemberInfo[]> {
     try {
       const { id_tournament, id_gym, id_category, id_level } = parsedIds;
-      const { rows } = await pool.query(
-        "SELECT * FROM get_available_members_for_tournament($1, $2, $3, $4)",
-        [id_tournament, id_category, id_level, id_gym]
+      const { rows }: QueryResult<FullMemberInfo> = await pool.query(
+        "SELECT * FROM get_available_members_for_tournament($1, $2, $3, $4, $5, $6);",
+        [id_tournament, id_category, id_level, id_gym, 20, offset]
       );
       return rows;
     } catch (error) {
