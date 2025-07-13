@@ -24,10 +24,12 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     return;
   }
 
-  const payload = req.user; 
+  const payload = req.user;
 
-  if(!payload){
-    res.status(401).json({ error: "Acceso denegado, no se encontró el usuario" });
+  if (!payload) {
+    res
+      .status(401)
+      .json({ error: "Acceso denegado, no se encontró el usuario" });
     return;
   }
 
@@ -134,12 +136,10 @@ export const login = async (req: Request, res: Response) => {
     maxAge: 24 * 60 * 60 * 1000,
     signed: true,
   });
-  res
-    .status(200)
-    .json({
-      message: "Sesión iniciada correctamente",
-      userInfo: { userId: user.id, logged: true, role: user.role, full_name },
-    });
+  res.status(200).json({
+    message: "Sesión iniciada correctamente",
+    userInfo: { userId: user.id, logged: true, role: user.role, full_name },
+  });
 };
 
 export const getUsers = async (_req: Request, res: Response): Promise<void> => {
@@ -176,6 +176,28 @@ export const getOneUser = async (
       return;
     }
     res.status(200).json({ message: "Usuario obtenido correctamente", user });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const getUsersByRole = async (req: Request, res: Response) => {
+  try {
+    const parsedId = IdDTO.safeParse(Number(req.params.rid));
+    if (!parsedId.success) {
+      const allMessages = parseErrors(parsedId.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+
+    const users = await userService.getByRole(parsedId.data);
+    res
+      .status(200)
+      .json({ message: "Usuarios obtenidos correctamente", users });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

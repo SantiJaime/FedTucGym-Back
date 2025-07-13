@@ -1,3 +1,4 @@
+import { QueryResult } from "pg";
 import pool from "../database/db.config";
 import type { User } from "../schemas/users.schema";
 
@@ -18,6 +19,18 @@ export default class UserService {
         [full_name]
       );
       return rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  public async getByRole(id_role: number): Promise<UserResponse[]> {
+    try {
+      const { rows }: QueryResult<UserResponse> = await pool.query(
+        "SELECT * FROM users_view WHERE id_role = $1",
+        [id_role]
+      );
+      return rows;
     } catch (error) {
       throw error;
     }
