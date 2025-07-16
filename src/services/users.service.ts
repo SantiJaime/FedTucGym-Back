@@ -12,12 +12,14 @@ export default class UserService {
     }
   }
 
-  public async getByName(full_name: string): Promise<UserResponse | undefined> {
+  public async getByName(
+    full_name: string
+  ): Promise<(UserResponse & { password: string }) | undefined> {
     try {
-      const { rows } = await pool.query(
-        "SELECT u.id, u.full_name, u.password, r.name AS role FROM users u LEFT JOIN roles r ON u.id_role = r.id WHERE full_name = $1",
-        [full_name]
-      );
+      const { rows }: QueryResult<UserResponse & { password: string }> =
+        await pool.query("SELECT * FROM get_users_by_full_name($1)", [
+          full_name,
+        ]);
       return rows[0];
     } catch (error) {
       throw error;

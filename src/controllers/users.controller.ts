@@ -101,7 +101,7 @@ export const login = async (req: Request, res: Response) => {
 
   const validPassword = await comparePassword(
     password,
-    user.password as string
+    user.password
   );
   if (!validPassword) {
     res
@@ -110,7 +110,13 @@ export const login = async (req: Request, res: Response) => {
     return;
   }
 
-  const payload = { userId: user.id, role: user.role, full_name };
+  const payload = {
+    userId: user.id,
+    role: user.role,
+    full_name,
+    category: user.category,
+    id_category: user.id_category,
+  };
   const accessToken = generateToken(payload, env.JWT_SECRET as string, 30 * 60);
   const refreshToken = generateToken(
     payload,
@@ -138,7 +144,13 @@ export const login = async (req: Request, res: Response) => {
   });
   res.status(200).json({
     message: "Sesión iniciada correctamente",
-    userInfo: { userId: user.id, logged: true, role: user.role, full_name },
+    userInfo: {
+      userId: user.id,
+      role: user.role,
+      full_name,
+      category: user.category,
+      id_category: user.id_category,
+    },
   });
 };
 
