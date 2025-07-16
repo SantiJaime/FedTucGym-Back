@@ -2,10 +2,14 @@ interface UserResponse {
   id: number;
   full_name: string;
   role: string;
-  password?: string;
+  category: string;
+  id_category: 1 | 2 | 3;
 }
 
-type CreateMember = Omit<Member, "id"> & { age: number; id_category: CategoryID };
+type CreateMember = Omit<Member, "id"> & {
+  age: number;
+  id_category: CategoryID;
+};
 
 interface UpdateTokenParams {
   id: number;
@@ -19,7 +23,7 @@ interface FullMemberInfo {
   full_name: string;
   birth_date: string;
   age: number;
-  category: string ;
+  category: string;
   gym: string;
   dni: number;
   level: string;
