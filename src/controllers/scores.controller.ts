@@ -65,11 +65,15 @@ export const getScoresByCategoryAndLevel = async (
       return;
     }
 
-    const scores = await scoreService.getByCategoryAndLevel(
-      parsedData.data
-    );
-
-    const total = scores[0].total_count
+    const scores = await scoreService.getByCategoryAndLevel(parsedData.data);
+    if (scores.length === 0) {
+      res.status(404).json({
+        error:
+          "No se encontraron alumnos puntuados con los parámetros ingresados",
+      });
+      return;
+    }
+    const total = scores[0].total_count;
     res.status(200).json({
       message: "Tabla de puntajes obtenidos correctamente",
       scores,
@@ -103,11 +107,15 @@ export const getScoresByGym = async (req: Request, res: Response) => {
       res.status(400).json({ error: allMessages });
       return;
     }
-    const scores = await scoreService.getByCategoryLevelAndGym(
-      parsedData.data
-    );
-
-    const total = scores[0].total_count
+    const scores = await scoreService.getByCategoryLevelAndGym(parsedData.data);
+    if (scores.length === 0) {
+      res.status(404).json({
+        error:
+          "No se encontraron alumnos puntuados con los parámetros ingresados",
+      });
+      return;
+    }
+    const total = scores[0].total_count;
     res.status(200).json({
       message: "Tabla de puntajes obtenidos correctamente",
       scores,
