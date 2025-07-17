@@ -79,6 +79,15 @@ export const getMembersByGym = async (
       countQuery,
       countValues
     );
+    if (members.length === 0) {
+      res
+        .status(404)
+        .json({
+          error:
+            "No se encontraron alumnos alumnos con los parámetros ingresados",
+        });
+      return;
+    }
     res.status(200).json({
       message: "Alumnos obtenidos correctamente",
       members,

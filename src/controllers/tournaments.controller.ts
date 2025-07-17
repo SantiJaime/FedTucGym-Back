@@ -241,15 +241,9 @@ export const getMembersTournamentsByGym = async (
       );
 
     if (membersTournaments.length === 0) {
-      res.status(200).json({
-        message: "No hay alumnos registrados al torneo",
-        membersTournaments: [],
-        pagination: {
-          total: 0,
-          page: parsedData.data.page,
-          perPage: 20,
-          totalPages: 0,
-        },
+      res.status(404).json({
+        error:
+          "No se encontraron alumnos registrados a este torneo con los parámetros ingresados",
       });
       return;
     }
@@ -306,6 +300,14 @@ export const getMembersNotInTournaments = async (
       offset
     );
 
+    if (members.length === 0) {
+      res.status(404).json({
+        error:
+          "No se encontraron alumnos NO registrados a este torneo con los parámetros ingresados",
+      });
+      return;
+    }
+
     const total = members[0].total_count;
     res.status(200).json({
       message: "Alumnos NO registrados al torneo obtenidos correctamente",
@@ -348,6 +350,14 @@ export const GetMembersTournamentByCategoryAndLevel = async (
         parsedData.data,
         offset
       );
+
+    if (membersTournaments.length === 0) {
+      res.status(404).json({
+        error:
+          "No se encontraron alumnos registrados a este torneo con los parámetros ingresados",
+      });
+      return;
+    }
     const total = membersTournaments[0].total_count;
     res.status(200).json({
       message: "Alumnos registrados al torneo obtenidos correctamente",
