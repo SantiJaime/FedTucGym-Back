@@ -239,15 +239,8 @@ export const getMembersTournamentsByGym = async (
         parsedData.data,
         offset
       );
-
-    if (membersTournaments.length === 0) {
-      res.status(404).json({
-        error:
-          "No se encontraron alumnos registrados a este torneo con los parámetros ingresados",
-      });
-      return;
-    }
-    const total = membersTournaments[0].total_count;
+    const total =
+      membersTournaments.length > 0 ? membersTournaments[0].total_count : 0;
     res.status(200).json({
       message: "Alumnos registrados al torneo obtenidos correctamente",
       membersTournaments,

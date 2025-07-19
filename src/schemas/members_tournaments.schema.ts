@@ -33,7 +33,7 @@ export type CreateMembersTournaments = z.infer<
 >;
 
 const MembersTournaments = z.object({
-  member: z.string(),
+  full_name: z.string(),
   dni: z.number(),
   id_member: IdDTO,
   id_tournament: IdDTO,
