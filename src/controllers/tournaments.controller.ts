@@ -13,6 +13,7 @@ import {
   UpdatePaidMembersTournamentsDTO,
 } from "../schemas/members_tournaments.schema";
 import { DatabaseError } from "pg";
+import { env } from "../config/env";
 
 const tournamentService = new TournamentService();
 
@@ -321,7 +322,41 @@ export const getMembersNotInTournaments = async (
   }
 };
 
-export const GetMembersTournamentByCategoryAndLevel = async (
+export const postDataOnSheets = async (req: Request, res: Response) => {
+  try {
+    const parsedId = IdDTO.safeParse(Number(req.params.tid));
+    if (!parsedId.success) {
+      const allMessages = parseErrors(parsedId.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+    const { membersTournaments, tournamentName } =
+      await tournamentService.getAllMembersByTournament(parsedId.data);
+
+    const scriptUrl = env.SHEETS_SCRIPT_URL;
+    const response = await fetch(scriptUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ membersTournaments, tournamentName }),
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      res.status(500).json({ error: text });
+      return;
+    }
+    const data = await response.json();
+    res
+      .status(200)
+      .json({ message: "Datos enviados correctamente", url: data.url });
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener los alumnos" });
+    console.log(error);
+  }
+};
+
+export const getMembersTournamentByCategoryAndLevel = async (
   req: Request,
   res: Response
 ) => {
@@ -330,7 +365,7 @@ export const GetMembersTournamentByCategoryAndLevel = async (
       id_category: Number(req.params.cid),
       id_level: Number(req.params.lid),
       id_tournament: Number(req.params.tid),
-      page: Number(req.query.page),
+      page: 1,
     });
     if (!parsedData.success) {
       const allMessages = parseErrors(parsedData.error.issues);

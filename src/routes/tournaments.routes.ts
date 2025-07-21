@@ -4,11 +4,12 @@ import {
   deleteTournament,
   getAllTournaments,
   getMembersNotInTournaments,
-  GetMembersTournamentByCategoryAndLevel,
+  getMembersTournamentByCategoryAndLevel,
   getMembersTournamentsByGym,
   getOneTournament,
   getPastTournamentsByDate,
   getTournamentsByDate,
+  postDataOnSheets,
   updatePayMemberTournament,
   updateTournament,
 } from "../controllers/tournaments.controller";
@@ -39,8 +40,9 @@ router.get(
 router.get(
   "/:tid/category/:cid/level/:lid",
   authMiddleware(["Administrador", "Gimnasio", "Juez"]),
-  GetMembersTournamentByCategoryAndLevel
+  getMembersTournamentByCategoryAndLevel
 );
+router.post("/:tid/sheets", postDataOnSheets);
 router.get(
   "/not-in/:tid/category/:cid/level/:lid/gym/:gid",
   authMiddleware(["Administrador", "Gimnasio"]),

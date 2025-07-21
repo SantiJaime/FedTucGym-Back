@@ -4,6 +4,7 @@ import {
   GetMembersTournamentByGym,
   GetMembersTournaments,
   MembersTournamentsView,
+  ScoresMembersTournaments,
   UpdatePaidMembersTournaments,
 } from "../schemas/members_tournaments.schema";
 import type { Tournament } from "../schemas/tournaments.schema";
@@ -107,6 +108,32 @@ export default class TournamentService {
       return rows;
     } catch (error) {
       console.log(error);
+      throw error;
+    }
+  }
+
+  public async getAllMembersByTournament(id_tournament: number): Promise<{
+    membersTournaments: ScoresMembersTournaments[];
+    tournamentName: string;
+  }> {
+    try {
+      const [tournamentNameResult, membersResult]: [
+        QueryResult<{ name: string }>,
+        QueryResult<ScoresMembersTournaments>
+      ] = await Promise.all([
+        pool.query("SELECT name FROM tournaments WHERE id = $1", [
+          id_tournament,
+        ]),
+        pool.query("SELECT * FROM get_members_tournaments($1)", [
+          id_tournament,
+        ]),
+      ]);
+
+      return {
+        tournamentName: tournamentNameResult.rows[0].name,
+        membersTournaments: membersResult.rows,
+      };
+    } catch (error) {
       throw error;
     }
   }

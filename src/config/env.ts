@@ -22,4 +22,5 @@ export const env = {
   COOKIE_SECRET: getEnvVariable('COOKIE_SECRET'),
   PGSCHEMA: getEnvVariable('PGSCHEMA'),
   NODE_ENV: getEnvVariable('NODE_ENV'),
+  SHEETS_SCRIPT_URL: getEnvVariable('SHEETS_SCRIPT_URL'),
 };
