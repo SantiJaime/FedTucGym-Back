@@ -47,6 +47,13 @@ export type MembersTournaments = z.infer<typeof MembersTournamentsDTO>;
 
 export type MembersTournamentsView = z.infer<typeof MembersTournaments>;
 
+export type ScoresMembersTournaments = {
+  full_name: string;
+  dni: number;
+  category: string;
+  level: string;
+}
+
 export type UpdatePaidMembersTournaments = z.infer<
   typeof UpdatePaidMembersTournamentsDTO
 >;
