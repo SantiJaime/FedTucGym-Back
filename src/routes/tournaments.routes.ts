@@ -10,6 +10,7 @@ import {
   getPastTournamentsByDate,
   getTournamentsByDate,
   postDataOnSheets,
+  redirectToGoogleSheets,
   updatePayMemberTournament,
   updateTournament,
 } from "../controllers/tournaments.controller";
@@ -42,7 +43,8 @@ router.get(
   authMiddleware(["Administrador", "Gimnasio", "Juez"]),
   getMembersTournamentByCategoryAndLevel
 );
-router.post("/:tid/sheets", postDataOnSheets);
+router.get("/:tid/sheets", redirectToGoogleSheets)
+router.post("/:tid/sheets", authMiddleware(["Administrador"]), postDataOnSheets);
 router.get(
   "/not-in/:tid/category/:cid/level/:lid/gym/:gid",
   authMiddleware(["Administrador", "Gimnasio"]),
