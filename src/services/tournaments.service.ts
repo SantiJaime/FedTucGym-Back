@@ -42,11 +42,11 @@ export default class TournamentService {
 
   public async getById(id: number): Promise<Tournament | undefined> {
     try {
-      const { rows } = await pool.query(
-        "SELECT * FROM tournaments WHERE id = $1",
+      const { rows }: QueryResult<Tournament> = await pool.query(
+        "SELECT name FROM tournaments WHERE id = $1",
         [id]
       );
-      return rows[0];
+      return rows[0]
     } catch (error) {
       throw error;
     }

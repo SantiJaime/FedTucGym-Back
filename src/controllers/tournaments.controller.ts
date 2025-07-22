@@ -322,6 +322,32 @@ export const getMembersNotInTournaments = async (
   }
 };
 
+export const redirectToGoogleSheets = async (req: Request, res: Response) => {
+  try {
+    const parsedId = IdDTO.safeParse(Number(req.params.tid));
+    if (!parsedId.success) {
+      const allMessages = parseErrors(parsedId.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+    const tournament = await tournamentService.getById(parsedId.data);
+    if (!tournament) {
+      res.status(404).json({ error: "Torneo no encontrado" });
+      return;
+    }
+    const encodedName = encodeURIComponent(tournament.name);
+    const scriptUrl = `${env.SHEETS_SCRIPT_URL}?sheet=${encodedName}`;
+
+    res.status(200).json({ scriptUrl });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
 export const postDataOnSheets = async (req: Request, res: Response) => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.tid));
