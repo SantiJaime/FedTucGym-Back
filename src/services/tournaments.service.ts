@@ -11,15 +11,7 @@ import type { Tournament } from "../schemas/tournaments.schema";
 import { postDataOnSheets } from "../controllers/tournaments.controller";
 
 
-/* Busca torneos que empiecen dentro de una franja de 1 hora específica */
-export async function getTournamentsStartingIn(hours: number): Promise<number[]> {
-  const { rows } = await pool.query(`
-    SELECT id
-    FROM tournaments
-    WHERE lower(date_range) BETWEEN NOW() + INTERVAL '${hours} hours' AND NOW() + INTERVAL '${hours + 1} hours'
-  `);
-  return rows.map(row => row.id);
-}
+
 
 export default class TournamentService {
   public async getAll(): Promise<Tournament[]> {
