@@ -7,7 +7,7 @@ interface Dates {
 }
 
 export const formatDateForDaterange = ({ startDate, endDate }: Dates): string =>
-  `${startDate} | ${endDate}`;
+  `[${startDate},${endDate})`;
 
 export const subtractDays = (dateStr: string, days: number = 10): string => {
   const date = new Date(dateStr);

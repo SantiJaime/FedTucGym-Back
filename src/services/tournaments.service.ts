@@ -7,11 +7,10 @@ import {
   ScoresMembersTournaments,
   UpdatePaidMembersTournaments,
 } from "../schemas/members_tournaments.schema";
-import type { Tournament } from "../schemas/tournaments.schema";
-import { postDataOnSheets } from "../controllers/tournaments.controller";
+import type { CreateTournament, Tournament } from "../schemas/tournaments.schema";
 
-
-
+import cron from "node-cron";
+import { sheetsService } from "./index.service";
 
 export default class TournamentService {
   public async getAll(): Promise<Tournament[]> {
@@ -25,7 +24,7 @@ export default class TournamentService {
 
   public async getByDate(): Promise<Tournament[]> {
     try {
-      const { rows } = await pool.query(
+      const { rows }: QueryResult<Tournament> = await pool.query(
         "SELECT * FROM tournaments WHERE inscription_date_end >= CURRENT_DATE ORDER BY inscription_date_end ASC"
       );
       return rows;
@@ -35,8 +34,8 @@ export default class TournamentService {
   }
   public async getPastByDate(): Promise<Tournament[]> {
     try {
-      const { rows } = await pool.query(
-        "SELECT * FROM tournaments WHERE inscription_date_end < CURRENT_DATE ORDER BY inscription_date_end ASC"
+      const { rows }: QueryResult<Tournament> = await pool.query(
+        "SELECT * FROM tournaments WHERE inscription_date_end < CURRENT_DATE AND LOWER(date_range) >= CURRENT_DATE ORDER BY LOWER(date_range) ASC"
       );
       return rows;
     } catch (error) {
@@ -50,53 +49,45 @@ export default class TournamentService {
         "SELECT name FROM tournaments WHERE id = $1",
         [id]
       );
-      return rows[0]
+      return rows[0];
     } catch (error) {
       throw error;
     }
   }
 
   public async create(
-    tournamentData: Omit<Tournament, "id">
+    tournamentData: CreateTournament & { inscriptionDateEnd: string }
   ): Promise<Tournament> {
     try {
-      const { name, date_range, inscriptionDateEnd } = tournamentData;
+      const { name, startDate, endDate, inscriptionDateEnd } = tournamentData;
 
-      const { rows } = await pool.query(
-        "INSERT INTO tournaments (name, date_range, inscription_date_end) VALUES ($1, $2, $3) RETURNING *",
-        [name, date_range, inscriptionDateEnd]
-        
+      const { rows }: QueryResult<Tournament> = await pool.query(
+        "INSERT INTO tournaments (name, date_range, inscription_date_end) VALUES ($1, daterange($2, $3, '[]'), $4) RETURNING *",
+        [name, startDate, endDate, inscriptionDateEnd]
       );
       const newTournament = rows[0];
-      return rows[0];
+      const [year, month, day] = startDate.split("-").map(Number);
 
-      //Automatización de exportación 12 horas antes del inicio
-    let startDate: Date;
-      if (typeof newTournament.date_range === "string") {
-        startDate = new Date(newTournament.date_range);
-      } else if (newTournament.date_range && newTournament.date_range.lower) {
-        startDate = new Date(newTournament.date_range.lower);
-      } else {
-        // Fallback: intenta convertir directamente
-        startDate = new Date(newTournament.date_range);
-      }
+      const cronExpression = `0 3 ${day} ${month} *`;
 
-      const now = new Date();
-      const msUntilExport = startDate.getTime() - now.getTime() - 12 * 60 * 60 * 1000;
-
-      if (msUntilExport > 0) {
-        setTimeout(async () => {
-          const req = { params: { tid: newTournament.id.toString() } } as any;
-          const res = {
-            status: (/*code: number*/) => ({
-              json: (data: any) => console.log(`Exportación automática para torneo ${newTournament.id}:`, data),
-            }),
-          } as any;
-
-          await postDataOnSheets(req, res);
-        }, msUntilExport);
-      }
-      // --------------------------------------------------------------
+      cron.schedule(cronExpression, async () => {
+        const now = new Date();
+        if (now.getFullYear() === year) {
+          try {
+            await sheetsService.exportTournamentToSheet(newTournament.id);
+            console.log(
+              `✅ Exportación automática del torneo ${newTournament.name} completada`
+            );
+          } catch (error) {
+            if (error instanceof Error) {
+              throw new Error(error.message);
+            }
+            throw new Error(
+              "Error desconocido al cargar torneo en hoja de cálculo"
+            );
+          }
+        }
+      });
 
       return newTournament;
     } catch (error) {

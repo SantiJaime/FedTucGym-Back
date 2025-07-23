@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import UserService from "../services/users.service";
 import {
   CreateUserDTO,
   LoginUserDTO,
@@ -11,8 +10,7 @@ import { comparePassword } from "../utils/bcrypt";
 import { generateToken } from "../utils/jwt.config";
 import { IdDTO } from "../schemas/id.schema";
 import { env } from "../config/env";
-
-const userService = new UserService();
+import { userService } from '../services/index.service';
 
 const NODE_ENV_PRODUCTION = env.NODE_ENV === "production";
 

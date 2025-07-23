@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import MembersService from "../services/members.service";
 import { IdDTO } from "../schemas/id.schema";
 import {
   buildCountMembersQuery,
@@ -10,8 +9,7 @@ import {
 import { CreateMemberDTO, FilterMembersDTO } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 import { RegisterMembersTournamentsDTO } from "../schemas/members_tournaments.schema";
-
-const membersService = new MembersService();
+import { membersService } from '../services/index.service';
 
 export const getAllMembers = async (
   _req: Request,
