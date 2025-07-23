@@ -88,7 +88,7 @@ export default class TournamentService {
         setTimeout(async () => {
           const req = { params: { tid: newTournament.id.toString() } } as any;
           const res = {
-            status: (code: number) => ({
+            status: (/*code: number*/) => ({
               json: (data: any) => console.log(`Exportación automática para torneo ${newTournament.id}:`, data),
             }),
           } as any;
