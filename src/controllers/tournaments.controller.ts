@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import TournamentService from "../services/tournaments.service";
 import { CreateTournamentDTO } from "../schemas/tournaments.schema";
 import {
   formatDateForDaterange,
@@ -14,8 +13,7 @@ import {
 } from "../schemas/members_tournaments.schema";
 import { DatabaseError } from "pg";
 import { env } from "../config/env";
-
-const tournamentService = new TournamentService();
+import { sheetsService, tournamentService } from '../services/index.service';
 
 export const getAllTournaments = async (
   _req: Request,
@@ -115,12 +113,11 @@ export const createTournament = async (
 
     const { name, startDate, endDate } = parsedTournament.data;
 
-    const parsedDate = formatDateForDaterange({ startDate, endDate });
     const inscriptionDateEnd = subtractDays(startDate);
-
     const tournament = await tournamentService.create({
       name,
-      date_range: parsedDate,
+      startDate,
+      endDate,
       inscriptionDateEnd,
     });
     res
@@ -356,29 +353,15 @@ export const postDataOnSheets = async (req: Request, res: Response) => {
       res.status(400).json({ error: allMessages });
       return;
     }
-    const { membersTournaments, tournamentName } =
-      await tournamentService.getAllMembersByTournament(parsedId.data);
+    const url = await sheetsService.exportTournamentToSheet(parsedId.data);
 
-    const scriptUrl = env.SHEETS_SCRIPT_URL;
-    const response = await fetch(scriptUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ membersTournaments, tournamentName }),
-    });
-    if (!response.ok) {
-      const text = await response.text();
-      res.status(500).json({ error: text });
+    res.status(200).json({ message: "Datos enviados correctamente", url });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
       return;
     }
-    const data = await response.json();
-    res
-      .status(200)
-      .json({ message: "Datos enviados correctamente", url: data.url });
-  } catch (error) {
-    res.status(500).json({ error: "Error al obtener los alumnos" });
-    console.log(error);
+    res.status(500).json({ error: "Error desonocido" });
   }
 };
 

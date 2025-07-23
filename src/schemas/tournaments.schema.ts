@@ -18,3 +18,4 @@ const TournamentDTO = z.object({
 });
 
 export type Tournament = z.infer<typeof TournamentDTO>;
+export type CreateTournament = z.infer<typeof CreateTournamentDTO>;
