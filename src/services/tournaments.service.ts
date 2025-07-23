@@ -8,6 +8,18 @@ import {
   UpdatePaidMembersTournaments,
 } from "../schemas/members_tournaments.schema";
 import type { Tournament } from "../schemas/tournaments.schema";
+import { postDataOnSheets } from "../controllers/tournaments.controller";
+
+
+/* Busca torneos que empiecen dentro de una franja de 1 hora específica */
+export async function getTournamentsStartingIn(hours: number): Promise<number[]> {
+  const { rows } = await pool.query(`
+    SELECT id
+    FROM tournaments
+    WHERE lower(date_range) BETWEEN NOW() + INTERVAL '${hours} hours' AND NOW() + INTERVAL '${hours + 1} hours'
+  `);
+  return rows.map(row => row.id);
+}
 
 export default class TournamentService {
   public async getAll(): Promise<Tournament[]> {
@@ -61,8 +73,40 @@ export default class TournamentService {
       const { rows } = await pool.query(
         "INSERT INTO tournaments (name, date_range, inscription_date_end) VALUES ($1, $2, $3) RETURNING *",
         [name, date_range, inscriptionDateEnd]
+        
       );
+      const newTournament = rows[0];
       return rows[0];
+
+      //Automatización de exportación 12 horas antes del inicio
+    let startDate: Date;
+      if (typeof newTournament.date_range === "string") {
+        startDate = new Date(newTournament.date_range);
+      } else if (newTournament.date_range && newTournament.date_range.lower) {
+        startDate = new Date(newTournament.date_range.lower);
+      } else {
+        // Fallback: intenta convertir directamente
+        startDate = new Date(newTournament.date_range);
+      }
+
+      const now = new Date();
+      const msUntilExport = startDate.getTime() - now.getTime() - 12 * 60 * 60 * 1000;
+
+      if (msUntilExport > 0) {
+        setTimeout(async () => {
+          const req = { params: { tid: newTournament.id.toString() } } as any;
+          const res = {
+            status: (code: number) => ({
+              json: (data: any) => console.log(`Exportación automática para torneo ${newTournament.id}:`, data),
+            }),
+          } as any;
+
+          await postDataOnSheets(req, res);
+        }, msUntilExport);
+      }
+      // --------------------------------------------------------------
+
+      return newTournament;
     } catch (error) {
       throw error;
     }
