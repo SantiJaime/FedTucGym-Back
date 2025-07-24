@@ -35,7 +35,7 @@ export default class TournamentService {
   public async getPastByDate(): Promise<Tournament[]> {
     try {
       const { rows }: QueryResult<Tournament> = await pool.query(
-        "SELECT * FROM tournaments WHERE inscription_date_end < CURRENT_DATE AND LOWER(date_range) >= CURRENT_DATE ORDER BY LOWER(date_range) ASC"
+        "SELECT * FROM tournaments WHERE inscription_date_end < CURRENT_DATE ORDER BY LOWER(date_range) DESC"
       );
       return rows;
     } catch (error) {
