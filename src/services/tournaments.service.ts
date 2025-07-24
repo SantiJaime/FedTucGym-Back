@@ -7,7 +7,10 @@ import {
   ScoresMembersTournaments,
   UpdatePaidMembersTournaments,
 } from "../schemas/members_tournaments.schema";
-import type { CreateTournament, Tournament } from "../schemas/tournaments.schema";
+import type {
+  CreateTournament,
+  Tournament,
+} from "../schemas/tournaments.schema";
 
 import cron from "node-cron";
 import { sheetsService } from "./index.service";
@@ -155,9 +158,10 @@ export default class TournamentService {
           id_tournament,
         ]),
       ]);
-
+      
+      const tournamentName = tournamentNameResult.rows[0].name || "";
       return {
-        tournamentName: tournamentNameResult.rows[0].name,
+        tournamentName,
         membersTournaments: membersResult.rows,
       };
     } catch (error) {
