@@ -44,7 +44,7 @@ router.get(
   getMembersTournamentByCategoryAndLevel
 );
 router.get("/:tid/sheets", redirectToGoogleSheets)
-router.post("/:tid/sheets", authMiddleware(["Administrador"]), postDataOnSheets);
+router.post("/:tid/sheets", postDataOnSheets);
 router.get(
   "/not-in/:tid/category/:cid/level/:lid/gym/:gid",
   authMiddleware(["Administrador", "Gimnasio"]),
