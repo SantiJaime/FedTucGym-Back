@@ -50,6 +50,7 @@ export type MembersTournamentsView = z.infer<typeof MembersTournaments>;
 export type ScoresMembersTournaments = {
   full_name: string;
   dni: number;
+  gym: string;
   category: string;
   level: string;
 }
