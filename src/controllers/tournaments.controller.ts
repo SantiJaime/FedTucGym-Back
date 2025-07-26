@@ -13,7 +13,8 @@ import {
 } from "../schemas/members_tournaments.schema";
 import { DatabaseError } from "pg";
 import { env } from "../config/env";
-import { sheetsService, tournamentService } from '../services/index.service';
+import { sheetsService, tournamentService } from "../services/index.service";
+import { PageDTO } from "../schemas/page.schema";
 
 export const getAllTournaments = async (
   _req: Request,
@@ -52,14 +53,28 @@ export const getTournamentsByDate = async (
 };
 
 export const getPastTournamentsByDate = async (
-  _req: Request,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const tournaments = await tournamentService.getPastByDate();
-    res
-      .status(200)
-      .json({ message: "Torneos obtenidos correctamente", tournaments });
+    const parsedPage = PageDTO.safeParse(Number(req.query.page));
+
+    if (!parsedPage.success) {
+      const allMessages = parseErrors(parsedPage.error.issues);
+      res.status(400).json({ error: allMessages });
+      return;
+    }
+    const { tournaments, totalCount, hasMore } =
+      await tournamentService.getPastByDate(parsedPage.data);
+    res.status(200).json({
+      message: "Torneos obtenidos correctamente",
+      tournaments,
+      paginationInfo: {
+        totalCount,
+        hasMore,
+        page: parsedPage.data,
+      },
+    });
   } catch (error) {
     if (error instanceof Error || error instanceof DatabaseError) {
       res.status(500).json({ error: error.message });
