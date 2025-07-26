@@ -15,6 +15,12 @@ import type {
 import cron from "node-cron";
 import { sheetsService } from "./index.service";
 
+interface PaginatedTournaments {
+  tournaments: Tournament[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
 export default class TournamentService {
   public async getAll(): Promise<Tournament[]> {
     try {
@@ -35,12 +41,40 @@ export default class TournamentService {
       throw error;
     }
   }
-  public async getPastByDate(): Promise<Tournament[]> {
+
+  public async getPastByDate(
+    page = 1,
+    limit = 10
+  ): Promise<PaginatedTournaments> {
     try {
-      const { rows }: QueryResult<Tournament> = await pool.query(
-        "SELECT * FROM tournaments WHERE inscription_date_end < CURRENT_DATE ORDER BY LOWER(date_range) DESC"
-      );
-      return rows;
+      const offset = (page - 1) * limit;
+
+      const [tournamentResult, countResult]: [
+        QueryResult<Tournament>,
+        QueryResult<{ total: number }>
+      ] = await Promise.all([
+        pool.query(
+          `SELECT * FROM tournaments 
+         WHERE inscription_date_end < CURRENT_DATE 
+         ORDER BY LOWER(date_range) DESC 
+         LIMIT $1 OFFSET $2`,
+          [limit, offset]
+        ),
+        pool.query(
+          `SELECT COUNT(*) AS total FROM tournaments 
+         WHERE inscription_date_end < CURRENT_DATE`
+        ),
+      ]);
+
+      const tournaments = tournamentResult.rows;
+      const totalCount = Number(countResult.rows[0].total);
+      const hasMore = (page * limit) < totalCount;
+
+      return {
+        tournaments,
+        totalCount,
+        hasMore,
+      };
     } catch (error) {
       throw error;
     }
@@ -69,9 +103,9 @@ export default class TournamentService {
         [name, startDate, endDate, inscriptionDateEnd]
       );
       const newTournament = rows[0];
-      const [year, month, day] = startDate.split("-").map(Number);
+      const [year, month, day] = inscriptionDateEnd.split("-").map(Number);
 
-      const cronExpression = `0 3 ${day} ${month} *`;
+      const cronExpression = `0 3 ${day + 1} ${month} *`;
 
       cron.schedule(cronExpression, async () => {
         const now = new Date();
@@ -158,7 +192,7 @@ export default class TournamentService {
           id_tournament,
         ]),
       ]);
-      
+
       const tournamentName = tournamentNameResult.rows[0].name || "";
       return {
         tournamentName,
