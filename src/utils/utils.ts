@@ -29,7 +29,6 @@ export const buildMembersQuery = (
   const limit = 20;
   const offset = page && page > 0 ? (page - 1) * limit : 0;
   let baseQuery = "SELECT * FROM members_view WHERE id_gym = $1";
-  let baseCountQuery = "SELECT COUNT(*) FROM members WHERE id_gym = $1";
   let values: any[] = [gymId];
   let conditions: string[] = [];
 
@@ -54,13 +53,9 @@ export const buildMembersQuery = (
   }
 
   let query = baseQuery;
-  let countQuery = baseCountQuery;
   if (conditions.length) {
     query += " AND " + conditions.join(" AND ");
-    countQuery += " AND " + conditions.join(" AND ");
   }
-
-  query += " ORDER BY id_category, id_level ASC";
 
   values.push(limit);
   query += ` LIMIT $${values.length}`;
@@ -68,7 +63,7 @@ export const buildMembersQuery = (
   values.push(offset);
   query += ` OFFSET $${values.length}`;
 
-  return { query, countQuery, values };
+  return { query, values };
 };
 
 export const buildCountMembersQuery = (
