@@ -1,0 +1,66 @@
+import { z } from "zod";
+import { IdDTO } from "./id.schema";
+import { PageDTO } from "./page.schema";
+
+export const RegisterMembersTournamentsDTO = z.object({
+  id_member: IdDTO,
+  id_tournament: IdDTO,
+});
+
+export const GetMembersTournamentsDTO = z.object({
+  id_tournament: IdDTO,
+  id_category: IdDTO,
+  id_level: IdDTO,
+  page: PageDTO,
+});
+
+export const GetMembersTournamentsByGymDTO = GetMembersTournamentsDTO.extend({
+  id_gym: IdDTO,
+});
+
+export const MembersTournamentsDTO = RegisterMembersTournamentsDTO.extend({
+  paid: z.boolean(),
+});
+
+export const UpdatePaidMembersTournamentsDTO = z.object({
+  id_member: IdDTO,
+  id_tournament: IdDTO,
+  paid: z.boolean(),
+});
+
+export type CreateMembersTournaments = z.infer<
+  typeof RegisterMembersTournamentsDTO
+>;
+
+const MembersTournaments = z.object({
+  full_name: z.string(),
+  dni: z.number(),
+  id_member: IdDTO,
+  id_tournament: IdDTO,
+  id_gym: IdDTO,
+  gym: z.string(),
+  paid: z.boolean(),
+  total_count: z.number(),
+});
+
+export type MembersTournaments = z.infer<typeof MembersTournamentsDTO>;
+
+export type MembersTournamentsView = z.infer<typeof MembersTournaments>;
+
+export type ScoresMembersTournaments = {
+  full_name: string;
+  dni: number;
+  gym: string;
+  category: string;
+  level: string;
+}
+
+export type UpdatePaidMembersTournaments = z.infer<
+  typeof UpdatePaidMembersTournamentsDTO
+>;
+
+export type GetMembersTournaments = z.infer<typeof GetMembersTournamentsDTO>;
+
+export type GetMembersTournamentByGym = z.infer<
+  typeof GetMembersTournamentsByGymDTO
+>;
