@@ -9,20 +9,31 @@ import tournamentsRouter from "./routes/tournaments.routes";
 import membersRouter from "./routes/members.routes";
 import puntajesRouter from "./routes/scores.routes";
 
-import { env } from './config/env';
+import { env } from "./config/env";
 import { borrarInscripcionesSinPago } from "./services/members.service";
 import { actualizarCategoriasMiembros } from "./services/members.service";
 
-
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://torneos-fedtucgim.vercel.app",
+];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(cookieParser(env.COOKIE_SECRET));
 
 app.use("/users", userRouter);
@@ -39,7 +50,7 @@ pool
     console.error("❌ Error al conectar a PostgreSQL:", err);
   });
 
-  cron.schedule("* 2 * * *", async () => {
+cron.schedule("* 2 * * *", async () => {
   try {
     await borrarInscripcionesSinPago();
     console.log("Inscripciones no pagas eliminadas automáticamente");
