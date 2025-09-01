@@ -41,13 +41,13 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: NODE_ENV_PRODUCTION,
-      sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+      sameSite: "none",
       signed: true,
     });
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: NODE_ENV_PRODUCTION,
-      sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+      sameSite: "none",
       signed: true,
     });
     res.status(401).json({
@@ -70,7 +70,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
   res.cookie("accessToken", token, {
     httpOnly: true,
     secure: NODE_ENV_PRODUCTION,
-    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    sameSite: "none",
     maxAge: 1 * 60 * 60 * 1000,
     signed: true,
   });
@@ -129,14 +129,14 @@ export const login = async (req: Request, res: Response) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: NODE_ENV_PRODUCTION,
-    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    sameSite: "none",
     maxAge: 30 * 60 * 1000,
     signed: true,
   });
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: NODE_ENV_PRODUCTION,
-    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    sameSite: "none",
     maxAge: 24 * 60 * 60 * 1000,
     signed: true,
   });
@@ -316,13 +316,13 @@ export const logout = (_req: Request, res: Response) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: NODE_ENV_PRODUCTION,
-    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    sameSite: "none",
   });
 
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: NODE_ENV_PRODUCTION,
-    sameSite: NODE_ENV_PRODUCTION ? "none" : "lax",
+    sameSite: "none",
   });
 
   res.status(200).json({ message: "Sesión cerrada correctamente" });
