@@ -94,7 +94,7 @@ export default class MembersService {
     try {
       const { full_name, birth_date, age, id_category } = member;
       const { rows } = await pool.query(
-        "UPDATE members SET full_name = $1, birth_date = $2, age = $3, id_category = $4 WHERE id = $6 RETURNING *",
+        "UPDATE members SET full_name = $1, birth_date = $2, age = $3, id_category = $4 WHERE id = $5 RETURNING *",
         [full_name, birth_date, age, id_category, id]
       );
       return rows[0];
