@@ -1,6 +1,6 @@
 import { DatabaseError, type QueryResult } from "pg";
 import pool from "../database/db.config";
-import type { Member } from "../schemas/members.shema";
+import type { Member, UpdateMember } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 import { MembersTournaments } from "../schemas/members_tournaments.schema";
 
@@ -89,13 +89,13 @@ export default class MembersService {
 
   public async update(
     id: number,
-    member: CreateMember
+    member: UpdateMember
   ): Promise<Member | undefined> {
     try {
-      const { full_name, birth_date, age, id_category } = member;
+      const { full_name, birth_date, dni, id_level } = member;
       const { rows } = await pool.query(
-        "UPDATE members SET full_name = $1, birth_date = $2, age = $3, id_category = $4 WHERE id = $5 RETURNING *",
-        [full_name, birth_date, age, id_category, id]
+        "UPDATE members SET full_name = $1, birth_date = $2, dni = $3, id_level = $4 WHERE id = $5 RETURNING *",
+        [full_name, birth_date, dni, id_level, id]
       );
       return rows[0];
     } catch (error) {

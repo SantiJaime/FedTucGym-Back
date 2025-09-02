@@ -14,13 +14,20 @@ export const CreateMemberDTO = z.object({
     .number()
     .int("El DNI debe ser un número entero")
     .nonnegative("El DNI no puede ser negativo")
-    .min(7, "El DNI debe tener al menos 7 caracteres"),
+    .min(9999999, "El DNI debe tener al menos 7 caracteres"),
   id_level: IdDTO,
 });
 
 export const MemberDTO = CreateMemberDTO.extend({
   id: IdDTO,
 });
+
+export const UpdateMemberDTO = MemberDTO.pick({
+  full_name: true,
+  birth_date: true,
+  dni: true,
+  id_level: true,
+})
 
 export const FilterMembersDTO = z.object({
   full_name: z
@@ -34,11 +41,12 @@ export const FilterMembersDTO = z.object({
     .number()
     .int("El DNI debe ser un número entero")
     .nonnegative("El DNI no puede ser negativo")
-    .min(7, "El DNI debe tener al menos 7 caracteres")
-    .max(8, "El DNI debe tener como máximo 8 caracteres")
+    .min(9999999, "El DNI debe tener al menos 7 caracteres")
+    .max(99999999, "El DNI debe tener como máximo 8 caracteres")
     .optional(),
   page: PageDTO,
 });
 
 export type Member = z.infer<typeof MemberDTO>;
 export type MembersFilter = z.infer<typeof FilterMembersDTO>;
+export type UpdateMember = z.infer<typeof UpdateMemberDTO>;
