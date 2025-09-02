@@ -189,22 +189,7 @@ export const updateMember = async (
       return;
     }
 
-    const { age, id_category } = calcularEdadYCategoriaAl31Dic(
-      parsedMember.data.birth_date
-    );
-
-    if (age < 6 || id_category === null) {
-      res
-        .status(400)
-        .json({ error: "La edad del alumno debe ser al menos 6 años" });
-      return;
-    }
-
-    const member = await membersService.update(parsedId.data, {
-      ...parsedMember.data,
-      age,
-      id_category,
-    });
+    const member = await membersService.update(parsedId.data, parsedMember.data);
     if (!member) {
       res.status(404).json({ error: "Alumno no encontrado" });
       return;
