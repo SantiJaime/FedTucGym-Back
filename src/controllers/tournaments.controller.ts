@@ -4,6 +4,7 @@ import {
   formatDateForDaterange,
   parseErrors,
   subtractDays,
+  validateDates,
 } from "../utils/utils";
 import { IdDTO } from "../schemas/id.schema";
 import {
@@ -126,14 +127,29 @@ export const createTournament = async (
       return;
     }
 
-    const { name, startDate, endDate } = parsedTournament.data;
+    const { name, startDate, endDate, inscription_date_end } =
+      parsedTournament.data;
 
-    const inscriptionDateEnd = subtractDays(startDate);
+    const areDatesValid = validateDates(
+      startDate,
+      endDate,
+      inscription_date_end
+    );
+    if (!areDatesValid) {
+      res
+        .status(400)
+        .json({
+          error:
+            "Las fechas no son válidas. La fecha de finalización debe ser igual o posterior a la fecha de inicio y el último día de inscripción menor al inicio",
+        });
+      return;
+    }
+
     const tournament = await tournamentService.create({
       name,
       startDate,
       endDate,
-      inscriptionDateEnd,
+      inscription_date_end,
     });
     res
       .status(201)
