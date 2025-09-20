@@ -8,6 +8,7 @@ export const CreateTournamentDTO = z.object({
     .min(3, "El nombre del torneo debe tener al menos 3 caracteres"),
   startDate: DateDTO,
   endDate: DateDTO,
+  inscription_date_end: DateDTO,
 });
 
 const TournamentDTO = z.object({

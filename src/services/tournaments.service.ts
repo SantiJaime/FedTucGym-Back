@@ -68,7 +68,7 @@ export default class TournamentService {
 
       const tournaments = tournamentResult.rows;
       const totalCount = Number(countResult.rows[0].total);
-      const hasMore = (page * limit) < totalCount;
+      const hasMore = page * limit < totalCount;
 
       return {
         tournaments,
@@ -92,20 +92,24 @@ export default class TournamentService {
     }
   }
 
-  public async create(
-    tournamentData: CreateTournament & { inscriptionDateEnd: string }
-  ): Promise<Tournament> {
+  public async create(tournamentData: CreateTournament): Promise<Tournament> {
     try {
-      const { name, startDate, endDate, inscriptionDateEnd } = tournamentData;
+      const { name, startDate, endDate, inscription_date_end } = tournamentData;
 
       const { rows }: QueryResult<Tournament> = await pool.query(
         "INSERT INTO tournaments (name, date_range, inscription_date_end) VALUES ($1, daterange($2, $3, '[]'), $4) RETURNING *",
-        [name, startDate, endDate, inscriptionDateEnd]
+        [name, startDate, endDate, inscription_date_end]
       );
       const newTournament = rows[0];
-      const [year, month, day] = inscriptionDateEnd.split("-").map(Number);
+      const [year, month, day] = inscription_date_end.split("-").map(Number);
 
-      const cronExpression = `0 3 ${day + 1} ${month} *`;
+      const date = new Date(year, month - 1, day);
+
+      date.setDate(date.getDate() + 1);
+
+      const nextDay = date.getDate();
+      const nextMonth = date.getMonth() + 1;
+      const cronExpression = `0 3 ${nextDay} ${nextMonth} *`;
 
       cron.schedule(cronExpression, async () => {
         const now = new Date();
