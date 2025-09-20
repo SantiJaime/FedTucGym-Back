@@ -16,7 +16,7 @@ interface UpdateTokenParams {
   oldToken: string;
   newToken: string;
 }
-type CategoryID = 1 | 2 | 3 | 4 | 5 | 6 | null;
+type CategoryID = 1 | 2 | 3 | 4 | 5 | 6 | 7 | null;
 
 interface FullMemberInfo {
   id: number;
