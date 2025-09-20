@@ -148,9 +148,9 @@ export const createMember = async (
       parsedMember.data.birth_date
     );
 
-    if (age < 4 || id_category === null) {
+    if (age < 2 || id_category === null) {
       res.status(400).json({
-        error: "El alumno debe tener al menos 4 años para poder ser registrado",
+        error: "El alumno debe tener al menos 2 años para poder ser registrado",
       });
       return;
     }

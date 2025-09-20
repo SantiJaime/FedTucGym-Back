@@ -23,7 +23,7 @@ export function calcularEdadYCategoriaAl31Dic(birth_date: string): {
     { id: 4, min: 12, max: 13 },
     { id: 5, min: 14, max: 15 },
     { id: 6, min: 16, max: 100 },
-    { id: 7, min: 4, max: 5 },
+    { id: 7, min: 2, max: 5 },
   ];
 
   const category = CATEGORIES.find((c) => age >= c.min && age <= c.max);
