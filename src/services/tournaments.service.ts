@@ -33,8 +33,11 @@ export default class TournamentService {
 
   public async getByDate(): Promise<Tournament[]> {
     try {
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
       const { rows }: QueryResult<Tournament> = await pool.query(
-        "SELECT * FROM tournaments WHERE inscription_date_end >= CURRENT_DATE ORDER BY inscription_date_end ASC"
+        "SELECT * FROM tournaments WHERE inscription_date_end >= $1 ORDER BY inscription_date_end ASC",
+        [formattedDate]
       );
       return rows;
     } catch (error) {
@@ -48,21 +51,23 @@ export default class TournamentService {
   ): Promise<PaginatedTournaments> {
     try {
       const offset = (page - 1) * limit;
-
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
       const [tournamentResult, countResult]: [
         QueryResult<Tournament>,
         QueryResult<{ total: number }>
       ] = await Promise.all([
         pool.query(
           `SELECT * FROM tournaments 
-         WHERE inscription_date_end < CURRENT_DATE 
+         WHERE inscription_date_end < $1
          ORDER BY LOWER(date_range) DESC 
-         LIMIT $1 OFFSET $2`,
-          [limit, offset]
+         LIMIT $2 OFFSET $3`,
+          [formattedDate, limit, offset]
         ),
         pool.query(
           `SELECT COUNT(*) AS total FROM tournaments 
-         WHERE inscription_date_end < CURRENT_DATE`
+         WHERE inscription_date_end < $1`,
+          [formattedDate]
         ),
       ]);
 
@@ -109,7 +114,7 @@ export default class TournamentService {
 
       const nextDay = date.getDate();
       const nextMonth = date.getMonth() + 1;
-      const cronExpression = `0 3 ${nextDay} ${nextMonth} *`;
+      const cronExpression = `0 0 ${nextDay} ${nextMonth} *`;
 
       cron.schedule(cronExpression, async () => {
         const now = new Date();

@@ -18,13 +18,20 @@ export const actualizarCategoriasMiembros = async (): Promise<void> => {
 };
 
 export const borrarInscripcionesSinPago = async (): Promise<void> => {
-  await pool.query(`
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("en-CA", {
+    timeZone: "America/Argentina/Buenos_Aires",
+  });
+  await pool.query(
+    `
     DELETE FROM members_tournaments mt
     USING tournaments t
     WHERE mt.id_tournament = t.id
       AND mt.paid = false
-      AND CURRENT_DATE > t.inscription_date_end
-  `);
+      AND $1 > t.inscription_date_end
+  `,
+    [formattedDate]
+  );
 };
 
 export default class MembersService {
