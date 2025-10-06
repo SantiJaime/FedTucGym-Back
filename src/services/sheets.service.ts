@@ -5,7 +5,7 @@ export default class GoogleSheetsService {
   public async exportTournamentToSheet(tournamentId: number): Promise<string> {
     try {
       const { membersTournaments, tournamentName } =
-        await tournamentService.getAllMembersByTournament(tournamentId);
+        await tournamentService.getAllPaidMembersByTournament(tournamentId);
 
       const scriptUrl = env.SHEETS_SCRIPT_URL;
 

@@ -211,6 +211,32 @@ export default class TournamentService {
       throw error;
     }
   }
+  public async getAllPaidMembersByTournament(id_tournament: number): Promise<{
+    membersTournaments: ScoresMembersTournaments[];
+    tournamentName: string;
+  }> {
+    try {
+      const [tournamentNameResult, membersResult]: [
+        QueryResult<{ name: string }>,
+        QueryResult<ScoresMembersTournaments>
+      ] = await Promise.all([
+        pool.query("SELECT name FROM tournaments WHERE id = $1", [
+          id_tournament,
+        ]),
+        pool.query("SELECT * FROM get_paid_members_by_tournament($1)", [
+          id_tournament,
+        ]),
+      ]);
+
+      const tournamentName = tournamentNameResult.rows[0].name || "";
+      return {
+        tournamentName,
+        membersTournaments: membersResult.rows,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 
   public async getMembersTournamentByCategoryAndLevel(
     parsedIds: GetMembersTournaments,
