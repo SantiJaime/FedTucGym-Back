@@ -9,11 +9,11 @@ import {
 import { CreateMemberDTO, FilterMembersDTO } from "../schemas/members.shema";
 import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 import { RegisterMembersTournamentsDTO } from "../schemas/members_tournaments.schema";
-import { membersService } from '../services/index.service';
+import { membersService } from "../services/index.service";
 
 export const getAllMembers = async (
   _req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const members = await membersService.getAll();
@@ -31,7 +31,7 @@ export const getAllMembers = async (
 
 export const getMembersByGym = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.gid));
@@ -65,25 +65,23 @@ export const getMembersByGym = async (
     const { query, values } = buildMembersQuery(
       parsedFilters.data,
       parsedId.data,
-      parsedFilters.data.page
+      parsedFilters.data.page,
     );
     const { countQuery, values: countValues } = buildCountMembersQuery(
       parsedFilters.data,
-      parsedId.data
+      parsedId.data,
     );
     const { data: members, total } = await membersService.getByGymId(
       query,
       values,
       countQuery,
-      countValues
+      countValues,
     );
     if (members.length === 0) {
-      res
-        .status(404)
-        .json({
-          error:
-            "No se encontraron alumnos alumnos con los parámetros ingresados",
-        });
+      res.status(404).json({
+        error:
+          "No se encontraron alumnos alumnos con los parámetros ingresados",
+      });
       return;
     }
     res.status(200).json({
@@ -107,7 +105,7 @@ export const getMembersByGym = async (
 
 export const getOneMember = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.id));
@@ -134,7 +132,7 @@ export const getOneMember = async (
 
 export const createMember = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedMember = CreateMemberDTO.safeParse(req.body);
@@ -145,7 +143,7 @@ export const createMember = async (
     }
 
     const { age, id_category } = calcularEdadYCategoriaAl31Dic(
-      parsedMember.data.birth_date
+      parsedMember.data.birth_date,
     );
 
     if (age < 2 || id_category === null) {
@@ -172,7 +170,7 @@ export const createMember = async (
 
 export const updateMember = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.id));
@@ -189,7 +187,10 @@ export const updateMember = async (
       return;
     }
 
-    const member = await membersService.update(parsedId.data, parsedMember.data);
+    const member = await membersService.update(
+      parsedId.data,
+      parsedMember.data,
+    );
     if (!member) {
       res.status(404).json({ error: "Alumno no encontrado" });
       return;
@@ -208,7 +209,7 @@ export const updateMember = async (
 
 export const deleteMember = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.id));
@@ -235,7 +236,7 @@ export const deleteMember = async (
 
 export const registerMemberToTournament = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedIds = RegisterMembersTournamentsDTO.safeParse({
@@ -250,7 +251,7 @@ export const registerMemberToTournament = async (
 
     const member = await membersService.registerToTournament(
       parsedIds.data.id_member,
-      parsedIds.data.id_tournament
+      parsedIds.data.id_tournament,
     );
     if (!member) {
       res.status(404).json({ error: "Alumno y/o torneo no encontrado" });
@@ -259,6 +260,22 @@ export const registerMemberToTournament = async (
     res
       .status(200)
       .json({ message: "Alumno registrado correctamente", member });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
+};
+
+export const updateMembersCategory = async (
+  _req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    await membersService.updateCategory();
+    res.status(200).json({ message: "Categorías actualizadas correctamente" });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json({ error: error.message });

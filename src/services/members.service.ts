@@ -1,38 +1,7 @@
 import { DatabaseError, type QueryResult } from "pg";
 import pool from "../database/db.config";
 import type { Member, UpdateMember } from "../schemas/members.shema";
-import { calcularEdadYCategoriaAl31Dic } from "../utils/categories";
 import { MembersTournaments } from "../schemas/members_tournaments.schema";
-
-export const actualizarCategoriasMiembros = async (): Promise<void> => {
-  const { rows: miembros } = await pool.query(
-    "SELECT id, birth_date FROM members"
-  );
-  for (const miembro of miembros) {
-    const { id_category } = calcularEdadYCategoriaAl31Dic(miembro.birth_date);
-    await pool.query("UPDATE members SET id_category = $1 WHERE id = $2", [
-      id_category,
-      miembro.id,
-    ]);
-  }
-};
-
-export const borrarInscripcionesSinPago = async (): Promise<void> => {
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString("en-CA", {
-    timeZone: "America/Argentina/Buenos_Aires",
-  });
-  await pool.query(
-    `
-    DELETE FROM members_tournaments mt
-    USING tournaments t
-    WHERE mt.id_tournament = t.id
-      AND mt.paid = false
-      AND $1 > t.inscription_date_end
-  `,
-    [formattedDate]
-  );
-};
 
 export default class MembersService {
   public async getAll(): Promise<FullMemberInfo[]> {
@@ -59,12 +28,12 @@ export default class MembersService {
     query: string,
     values: any[],
     countQuery: string,
-    countValues: any[]
+    countValues: any[],
   ): Promise<{ data: FullMemberInfo[]; total: number }> {
     try {
       const [dataResult, countResult]: [
         QueryResult<FullMemberInfo>,
-        QueryResult<{ count: string }>
+        QueryResult<{ count: string }>,
       ] = await Promise.all([
         pool.query(query, values),
         pool.query(countQuery, countValues),
@@ -86,7 +55,7 @@ export default class MembersService {
 
       const { rows } = await pool.query(
         "INSERT INTO members (full_name, birth_date, age, id_category, id_gym, dni, id_level) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [full_name, birth_date, age, id_category, id_gym, dni, id_level]
+        [full_name, birth_date, age, id_category, id_gym, dni, id_level],
       );
       return rows[0];
     } catch (error) {
@@ -96,13 +65,13 @@ export default class MembersService {
 
   public async update(
     id: number,
-    member: UpdateMember
+    member: UpdateMember,
   ): Promise<Member | undefined> {
     try {
       const { full_name, birth_date, dni, id_level } = member;
       const { rows } = await pool.query(
         "UPDATE members SET full_name = $1, birth_date = $2, dni = $3, id_level = $4 WHERE id = $5 RETURNING *",
-        [full_name, birth_date, dni, id_level, id]
+        [full_name, birth_date, dni, id_level, id],
       );
       return rows[0];
     } catch (error) {
@@ -114,7 +83,7 @@ export default class MembersService {
     try {
       const { rowCount } = await pool.query(
         "DELETE FROM members WHERE id = $1",
-        [id]
+        [id],
       );
       return !!rowCount && rowCount > 0;
     } catch (error) {
@@ -124,12 +93,12 @@ export default class MembersService {
 
   public async registerToTournament(
     memberId: number,
-    tournamentId: number
+    tournamentId: number,
   ): Promise<MembersTournaments> {
     try {
       const { rows } = await pool.query(
         "INSERT INTO members_tournaments (id_member, id_tournament) VALUES ($1, $2) RETURNING *",
-        [memberId, tournamentId]
+        [memberId, tournamentId],
       );
       return rows[0];
     } catch (error) {
@@ -141,6 +110,43 @@ export default class MembersService {
         } else if (error.code === "23502") {
           throw new Error("No se encontró el torneo con la ID proporcionada");
         }
+      }
+      throw new Error("Error de base de datos desconocido");
+    }
+  }
+
+  public async updateCategory(): Promise<void> {
+    try {
+      await pool.query("CALL actualizar_todas_las_categorias()");
+      return;
+    } catch (error) {
+      if (error instanceof DatabaseError || error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Error de base de datos desconocido");
+    }
+  }
+
+  public async deleteUnpaidInscriptions(): Promise<void> {
+    try {
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString("en-CA", {
+        timeZone: "America/Argentina/Buenos_Aires",
+      });
+      await pool.query(
+        `
+     DELETE FROM members_tournaments mt
+    USING tournaments t
+    WHERE mt.id_tournament = t.id
+      AND mt.paid = false
+      AND $1 > t.inscription_date_end
+        `,
+        [formattedDate],
+      );
+      return;
+    } catch (error) {
+      if (error instanceof DatabaseError || error instanceof Error) {
+        throw error;
       }
       throw new Error("Error de base de datos desconocido");
     }
