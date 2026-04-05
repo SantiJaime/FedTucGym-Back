@@ -8,10 +8,8 @@ import userRouter from "./routes/users.routes";
 import tournamentsRouter from "./routes/tournaments.routes";
 import membersRouter from "./routes/members.routes";
 import puntajesRouter from "./routes/scores.routes";
-
+import { membersService } from "./services/index.service";
 import { env } from "./config/env";
-import { borrarInscripcionesSinPago } from "./services/members.service";
-import { actualizarCategoriasMiembros } from "./services/members.service";
 
 const app = express();
 const allowedOrigins = [
@@ -32,7 +30,7 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 app.use(cookieParser(env.COOKIE_SECRET));
 
@@ -52,7 +50,7 @@ pool
 
 cron.schedule("* 2 * * *", async () => {
   try {
-    await borrarInscripcionesSinPago();
+    await membersService.deleteUnpaidInscriptions();
     console.log("Inscripciones no pagas eliminadas automáticamente");
   } catch (error) {
     console.error("Error al limpiar inscripciones no pagas:", error);
@@ -61,7 +59,7 @@ cron.schedule("* 2 * * *", async () => {
 
 cron.schedule("0 2 1 1 *", async () => {
   try {
-    await actualizarCategoriasMiembros();
+    await membersService.updateCategory();
     console.log("Categorías de miembros actualizadas automáticamente");
   } catch (error) {
     console.error("Error al actualizar categorías de miembros:", error);
