@@ -8,9 +8,9 @@ import {
 } from "../utils/utils";
 import { IdDTO } from "../schemas/id.schema";
 import {
+  DeleteMemberFromTournamentDTO,
   GetMembersTournamentsByGymDTO,
   GetMembersTournamentsDTO,
-  UpdatePaidMembersTournamentsDTO,
 } from "../schemas/members_tournaments.schema";
 import { DatabaseError } from "pg";
 import { env } from "../config/env";
@@ -19,7 +19,7 @@ import { PageDTO } from "../schemas/page.schema";
 
 export const getAllTournaments = async (
   _req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const tournaments = await tournamentService.getAll();
@@ -37,7 +37,7 @@ export const getAllTournaments = async (
 
 export const getTournamentsByDate = async (
   _req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const tournaments = await tournamentService.getByDate();
@@ -55,7 +55,7 @@ export const getTournamentsByDate = async (
 
 export const getPastTournamentsByDate = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedPage = PageDTO.safeParse(Number(req.query.page));
@@ -87,7 +87,7 @@ export const getPastTournamentsByDate = async (
 
 export const getOneTournament = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.id));
@@ -116,7 +116,7 @@ export const getOneTournament = async (
 };
 export const createTournament = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedTournament = CreateTournamentDTO.safeParse(req.body);
@@ -133,15 +133,13 @@ export const createTournament = async (
     const areDatesValid = validateDates(
       startDate,
       endDate,
-      inscription_date_end
+      inscription_date_end,
     );
     if (!areDatesValid) {
-      res
-        .status(400)
-        .json({
-          error:
-            "Las fechas no son válidas. La fecha de finalización debe ser igual o posterior a la fecha de inicio y el último día de inscripción menor al inicio",
-        });
+      res.status(400).json({
+        error:
+          "Las fechas no son válidas. La fecha de finalización debe ser igual o posterior a la fecha de inicio y el último día de inscripción menor al inicio",
+      });
       return;
     }
 
@@ -165,7 +163,7 @@ export const createTournament = async (
 
 export const updateTournament = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.id));
@@ -210,7 +208,7 @@ export const updateTournament = async (
 
 export const deleteTournament = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const parsedId = IdDTO.safeParse(Number(req.params.id));
@@ -237,7 +235,7 @@ export const deleteTournament = async (
 
 export const getMembersTournamentsByGym = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const parsedData = GetMembersTournamentsByGymDTO.safeParse({
@@ -266,7 +264,7 @@ export const getMembersTournamentsByGym = async (
     const membersTournaments =
       await tournamentService.getMembersTournamentByGym(
         parsedData.data,
-        offset
+        offset,
       );
     const total =
       membersTournaments.length > 0 ? membersTournaments[0].total_count : 0;
@@ -291,7 +289,7 @@ export const getMembersTournamentsByGym = async (
 
 export const getMembersNotInTournaments = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const parsedData = GetMembersTournamentsByGymDTO.safeParse({
@@ -319,18 +317,10 @@ export const getMembersNotInTournaments = async (
     const offset = (parsedData.data.page - 1) * 20;
     const members = await tournamentService.getMembersNotInTournament(
       parsedData.data,
-      offset
+      offset,
     );
 
-    if (members.length === 0) {
-      res.status(404).json({
-        error:
-          "No se encontraron alumnos NO registrados a este torneo con los parámetros ingresados",
-      });
-      return;
-    }
-
-    const total = members[0].total_count;
+    const total = members.length > 0 ? members[0].total_count : 0;
     res.status(200).json({
       message: "Alumnos NO registrados al torneo obtenidos correctamente",
       members,
@@ -398,7 +388,7 @@ export const postDataOnSheets = async (req: Request, res: Response) => {
 
 export const getMembersTournamentByCategoryAndLevel = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const parsedData = GetMembersTournamentsDTO.safeParse({
@@ -416,7 +406,7 @@ export const getMembersTournamentByCategoryAndLevel = async (
     const membersTournaments =
       await tournamentService.getMembersTournamentByCategoryAndLevel(
         parsedData.data,
-        offset
+        offset,
       );
 
     if (membersTournaments.length === 0) {
@@ -446,15 +436,14 @@ export const getMembersTournamentByCategoryAndLevel = async (
   }
 };
 
-export const updatePayMemberTournament = async (
+export const deleteMemberFromTournament = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
-    const parsedData = UpdatePaidMembersTournamentsDTO.safeParse({
+    const parsedData = DeleteMemberFromTournamentDTO.safeParse({
       id_member: Number(req.params.mid),
       id_tournament: Number(req.params.tid),
-      paid: req.body.paid,
     });
     if (!parsedData.success) {
       const allMessages = parseErrors(parsedData.error.issues);
@@ -462,16 +451,16 @@ export const updatePayMemberTournament = async (
       return;
     }
 
-    const updatedMemberTournament = await tournamentService.updatePayTournament(
-      parsedData.data
+    const deletedMemberTournament = await tournamentService.deleteMemberFromTournament(
+      parsedData.data.id_member, parsedData.data.id_tournament
     );
-    if (!updatedMemberTournament) {
+    if (!deletedMemberTournament) {
       res.status(404).json({ error: "Torneo y/o alumno no encontrado(s)" });
       return;
     }
 
     res.status(200).json({
-      message: "Alumno actualizado correctamente",
+      message: "Alumno y torneo actualizados correctamente",
     });
   } catch (error) {
     if (error instanceof Error) {
