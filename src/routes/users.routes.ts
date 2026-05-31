@@ -10,12 +10,14 @@ import {
   refreshAccessToken,
   logout,
   getUsersByRole,
+  getMe,
 } from "../controllers/users.controller";
 import { refreshAuthMiddleware } from '../middleware/refreshAuth';
 
 const router = Router();
 
 router.get("/", authMiddleware(["Administrador"]), getUsers);
+router.get("/me", getMe);
 router.get("/:id", authMiddleware(["Administrador", "Administrador", "Juez"]), getOneUser);
 router.get("/role/:rid", authMiddleware(["Administrador"]), getUsersByRole);
 router.post("/", authMiddleware(["Administrador"]), createUser);
