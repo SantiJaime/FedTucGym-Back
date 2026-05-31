@@ -11,7 +11,7 @@ import {
   getTournamentsByDate,
   postDataOnSheets,
   redirectToGoogleSheets,
-  updatePayMemberTournament,
+  deleteMemberFromTournament,
   updateTournament,
 } from "../controllers/tournaments.controller";
 import { authMiddleware } from "../middleware/auth";
@@ -58,10 +58,10 @@ router.get(
 );
 router.post("/", authMiddleware(["Administrador"]), createTournament);
 router.put("/:id", authMiddleware(["Administrador"]), updateTournament);
-router.patch(
+router.delete(
   "/:tid/member/:mid",
   authMiddleware(["Administrador", "Gimnasio"]),
-  updatePayMemberTournament
+  deleteMemberFromTournament
 );
 router.delete("/:id", authMiddleware(["Administrador"]), deleteTournament);
 

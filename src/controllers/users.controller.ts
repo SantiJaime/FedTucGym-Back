@@ -7,10 +7,11 @@ import {
 import { hashPassword, hashToken } from "../utils/bcrypt";
 import { parseErrors } from "../utils/utils";
 import { comparePassword } from "../utils/bcrypt";
-import { generateToken } from "../utils/jwt.config";
+import { generateToken, verifyToken } from "../utils/jwt.config";
 import { IdDTO } from "../schemas/id.schema";
 import { env } from "../config/env";
 import { userService } from '../services/index.service';
+import jwt from "jsonwebtoken";
 
 const NODE_ENV_PRODUCTION = env.NODE_ENV === "production";
 
@@ -115,10 +116,10 @@ export const login = async (req: Request, res: Response) => {
     category: user.category,
     id_category: user.id_category,
   };
-  const accessToken = generateToken(payload, env.JWT_SECRET as string, 30 * 60);
+  const accessToken = generateToken(payload, env.JWT_SECRET, 60 * 60);
   const refreshToken = generateToken(
     payload,
-    env.JWT_REFRESH_SECRET as string,
+    env.JWT_REFRESH_SECRET,
     60 * 60 * 24
   );
 
@@ -326,4 +327,43 @@ export const logout = (_req: Request, res: Response) => {
   });
 
   res.status(200).json({ message: "Sesión cerrada correctamente" });
+};
+
+export const getMe = async (req: Request, res: Response): Promise<void> => {
+  const signedAccessToken = req.signedCookies.accessToken;
+
+  if (!signedAccessToken) {
+    res.status(401).json({
+      msg: "No autenticado",
+      error: "No autenticado, por favor inicie sesión",
+    });
+    return;
+  }
+
+  try {
+    const payload = verifyToken(signedAccessToken, env.JWT_SECRET);
+    const user = await userService.getById(payload.userId)
+    if (!user) {
+      res.status(404).json({ error: "El usuario no existe" });
+      return;
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      res.status(403).json({
+        msg: "Token inválido o expirado",
+        error: error.message,
+      });
+      return;
+    }
+    if (error instanceof Error) {
+      res.status(500).json({
+        msg: "Error al obtener el usuario",
+        error: error.message,
+      });
+      return;
+    }
+    res.status(500).json({ error: "Error desconocido" });
+  }
 };
