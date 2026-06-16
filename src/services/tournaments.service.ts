@@ -117,7 +117,7 @@ export default class TournamentService {
 
       const nextDay = date.getDate();
       const nextMonth = date.getMonth() + 1;
-      const cronExpression = `0 0 ${nextDay} ${nextMonth} *`;
+      const cronExpression = `0 3 ${nextDay} ${nextMonth} *`;
 
       cron.schedule(cronExpression, async () => {
         const now = new Date();
